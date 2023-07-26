@@ -11,6 +11,10 @@
 
 class HotkeyRegistry;
 
+namespace Core {
+class System;
+}
+
 namespace Ui {
 class ConfigureDialog;
 }
