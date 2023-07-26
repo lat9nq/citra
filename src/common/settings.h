@@ -262,6 +262,8 @@ struct Values {
 
 extern Values values;
 
+const char* TranslateCategory(Category category);
+
 bool IsConfiguringGlobal();
 void SetConfiguringGlobal(bool is_global);
 

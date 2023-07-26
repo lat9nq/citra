@@ -11,59 +11,54 @@
 
 namespace Settings {
 
-namespace {
-
-std::string_view GetAudioEmulationName(AudioEmulation emulation) {
-    switch (emulation) {
-    case AudioEmulation::Hle:
-        return "HLE";
-    case AudioEmulation::Lle:
-        return "LLE";
-    case AudioEmulation::LleMultithreaded:
-        return "LLE Multithreaded";
-    default:
-        return "Invalid";
-    }
-};
-
-std::string_view GetGraphicsAPIName(GraphicsAPI api) {
-    switch (api) {
-    case GraphicsAPI::Software:
-        return "Software";
-    case GraphicsAPI::OpenGl:
-        return "OpenGL";
-    case GraphicsAPI::Vulkan:
-        return "Vulkan";
-    default:
-        return "Invalid";
-    }
-}
-
-std::string_view GetTextureFilterName(TextureFilter filter) {
-    switch (filter) {
-    case TextureFilter::None:
-        return "None";
-    case TextureFilter::Anime4K:
-        return "Anime4K";
-    case TextureFilter::Bicubic:
-        return "Bicubic";
-    case TextureFilter::NearestNeighbor:
-        return "NearestNeighbor";
-    case TextureFilter::ScaleForce:
-        return "ScaleForce";
-    case TextureFilter::Xbrz:
-        return "xBRZ";
-    case TextureFilter::Mmpx:
-        return "MMPX";
-    default:
-        return "Invalid";
-    }
-}
-
-} // Anonymous namespace
-
 Values values = {};
 static bool configuring_global = true;
+
+const char* TranslateCategory(Category category) {
+    switch (category) {
+    case Category::Audio:
+        return "Audio";
+    case Category::Core:
+        return "Core";
+    case Category::Renderer:
+    case Category::RendererAdvanced:
+    case Category::RendererDebug:
+        return "Renderer";
+    case Category::System:
+        return "System";
+    case Category::DataStorage:
+        return "Data Storage";
+    case Category::Debugging:
+    case Category::DebuggingGraphics:
+        return "Debugging";
+    case Category::Miscellaneous:
+        return "Miscellaneous";
+    case Category::WebService:
+        return "WebService";
+    case Category::Controls:
+        return "Controls";
+    case Category::Ui:
+    case Category::UiGeneral:
+        return "UI";
+    case Category::UiLayout:
+        return "UiLayout";
+    case Category::UiGameList:
+        return "UiGameList";
+    case Category::Screenshots:
+        return "Screenshots";
+    case Category::Shortcuts:
+        return "Shortcuts";
+    case Category::Multiplayer:
+        return "Multiplayer";
+    case Category::Services:
+        return "Services";
+    case Category::Paths:
+        return "Paths";
+    case Category::MaxEnum:
+        break;
+    }
+    return "Miscellaneous";
+}
 
 void LogSettings() {
     const auto log_setting = [](std::string_view name, const auto& value) {
@@ -71,44 +66,17 @@ void LogSettings() {
     };
 
     LOG_INFO(Config, "Citra Configuration:");
-    log_setting("Core_UseCpuJit", values.use_cpu_jit.GetValue());
-    log_setting("Core_CPUClockPercentage", values.cpu_clock_percentage.GetValue());
-    log_setting("Renderer_UseGLES", values.use_gles.GetValue());
-    log_setting("Renderer_GraphicsAPI", GetGraphicsAPIName(values.graphics_api.GetValue()));
-    log_setting("Renderer_AsyncShaders", values.async_shader_compilation.GetValue());
-    log_setting("Renderer_AsyncPresentation", values.async_presentation.GetValue());
-    log_setting("Renderer_SpirvShaderGen", values.spirv_shader_gen.GetValue());
-    log_setting("Renderer_Debug", values.renderer_debug.GetValue());
-    log_setting("Renderer_UseHwShader", values.use_hw_shader.GetValue());
-    log_setting("Renderer_ShadersAccurateMul", values.shaders_accurate_mul.GetValue());
-    log_setting("Renderer_UseShaderJit", values.use_shader_jit.GetValue());
-    log_setting("Renderer_UseResolutionFactor", values.resolution_factor.GetValue());
-    log_setting("Renderer_FrameLimit", values.frame_limit.GetValue());
-    log_setting("Renderer_VSyncNew", values.use_vsync_new.GetValue());
-    log_setting("Renderer_PostProcessingShader", values.pp_shader_name.GetValue());
-    log_setting("Renderer_FilterMode", values.filter_mode.GetValue());
-    log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
-    log_setting("Stereoscopy_Render3d", values.render_3d.GetValue());
-    log_setting("Stereoscopy_Factor3d", values.factor_3d.GetValue());
-    log_setting("Stereoscopy_MonoRenderOption", values.mono_render_option.GetValue());
-    if (values.render_3d.GetValue() == StereoRenderOption::Anaglyph) {
-        log_setting("Renderer_AnaglyphShader", values.anaglyph_shader_name.GetValue());
+
+    for (const auto& [category, settings] : values.linkage.by_category) {
+        const char* const category_str = TranslateCategory(category);
+        for (const auto* setting : settings) {
+            const char modified = setting->ToString() == setting->DefaultToString() ? '-' : 'M';
+            const char custom = setting->UsingGlobal() ? '-' : 'C';
+            LOG_INFO(Config, "{}{} {}.{}: {}", modified, custom, category_str, setting->GetLabel(),
+                     setting->Canonicalize());
+        }
     }
-    log_setting("Layout_LayoutOption", values.layout_option.GetValue());
-    log_setting("Layout_SwapScreen", values.swap_screen.GetValue());
-    log_setting("Layout_UprightScreen", values.upright_screen.GetValue());
-    log_setting("Layout_LargeScreenProportion", values.large_screen_proportion.GetValue());
-    log_setting("Utility_DumpTextures", values.dump_textures.GetValue());
-    log_setting("Utility_CustomTextures", values.custom_textures.GetValue());
-    log_setting("Utility_PreloadTextures", values.preload_textures.GetValue());
-    log_setting("Utility_AsyncCustomLoading", values.async_custom_loading.GetValue());
-    log_setting("Utility_UseDiskShaderCache", values.use_disk_shader_cache.GetValue());
-    log_setting("Audio_Emulation", GetAudioEmulationName(values.audio_emulation.GetValue()));
-    log_setting("Audio_OutputType", values.output_type.GetValue());
-    log_setting("Audio_OutputDevice", values.output_device.GetValue());
-    log_setting("Audio_InputType", values.input_type.GetValue());
-    log_setting("Audio_InputDevice", values.input_device.GetValue());
-    log_setting("Audio_EnableAudioStretching", values.enable_audio_stretching.GetValue());
+
     using namespace Service::CAM;
     log_setting("Camera_OuterRightName", values.camera_name[OuterRightCamera]);
     log_setting("Camera_OuterRightConfig", values.camera_config[OuterRightCamera]);
@@ -119,18 +87,10 @@ void LogSettings() {
     log_setting("Camera_OuterLeftName", values.camera_name[OuterLeftCamera]);
     log_setting("Camera_OuterLeftConfig", values.camera_config[OuterLeftCamera]);
     log_setting("Camera_OuterLeftFlip", values.camera_flip[OuterLeftCamera]);
-    log_setting("DataStorage_UseVirtualSd", values.use_virtual_sd.GetValue());
-    log_setting("DataStorage_UseCustomStorage", values.use_custom_storage.GetValue());
     if (values.use_custom_storage) {
         log_setting("DataStorage_SdmcDir", FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir));
         log_setting("DataStorage_NandDir", FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
     }
-    log_setting("System_IsNew3ds", values.is_new_3ds.GetValue());
-    log_setting("System_RegionValue", values.region_value.GetValue());
-    log_setting("System_PluginLoader", values.plugin_loader_enabled.GetValue());
-    log_setting("System_PluginLoaderAllowed", values.allow_plugin_loader.GetValue());
-    log_setting("Debugging_UseGdbstub", values.use_gdbstub.GetValue());
-    log_setting("Debugging_GdbstubPort", values.gdbstub_port.GetValue());
 }
 
 bool IsConfiguringGlobal() {
