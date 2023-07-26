@@ -359,7 +359,8 @@ struct MIC_U::Impl {
 
     void CreateMic() {
         std::unique_ptr<AudioCore::Input> new_mic = AudioCore::CreateInputFromID(
-            Settings::values.input_type.GetValue(), Settings::values.input_device.GetValue());
+            AudioCore::MapInputTypeFromSetting(Settings::values.input_type.GetValue()),
+            Settings::values.input_device.GetValue());
 
         // If theres already a mic, copy over any data to the new mic impl
         if (mic) {

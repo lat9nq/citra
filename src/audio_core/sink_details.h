@@ -9,6 +9,7 @@
 #include <string_view>
 #include <vector>
 #include "common/common_types.h"
+#include "common/settings_enums.h"
 
 namespace AudioCore {
 
@@ -23,6 +24,8 @@ enum class SinkType : u32 {
 
     NumSinkTypes,
 };
+
+SinkType MapSinkTypeFromSetting(Settings::AudioEngine value);
 
 /// Gets the name of a sink type.
 std::string_view GetSinkName(SinkType sink_type);

@@ -350,11 +350,12 @@ int main(int argc, char** argv) {
     const auto create_emu_window = [&](bool fullscreen,
                                        bool is_secondary) -> std::unique_ptr<EmuWindow_SDL2> {
         switch (Settings::values.graphics_api.GetValue()) {
-        case Settings::GraphicsAPI::OpenGL:
+        case Settings::GraphicsAPI::OpenGl:
             return std::make_unique<EmuWindow_SDL2_GL>(system, fullscreen, is_secondary);
         case Settings::GraphicsAPI::Vulkan:
             return std::make_unique<EmuWindow_SDL2_VK>(system, fullscreen, is_secondary);
         case Settings::GraphicsAPI::Software:
+        default:
             return std::make_unique<EmuWindow_SDL2_SW>(system, fullscreen, is_secondary);
         }
         LOG_ERROR(Frontend, "Invalid Graphics API, using OpenGL");

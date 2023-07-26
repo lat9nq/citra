@@ -16,6 +16,7 @@
 #include "audio_core/openal_input.h"
 #endif
 #include "common/logging/log.h"
+#include "common/settings_enums.h"
 #include "core/core.h"
 
 namespace AudioCore {
@@ -89,6 +90,23 @@ const InputDetails& GetInputDetails(InputType input_type) {
     return *iter;
 }
 } // Anonymous namespace
+
+InputType MapInputTypeFromSetting(Settings::AudioInputType value) {
+    switch (value) {
+    case Settings::AudioInputType::MaxEnum:
+    case Settings::AudioInputType::Auto:
+        return InputType::Auto;
+    case Settings::AudioInputType::Null:
+        return InputType::Null;
+    case Settings::AudioInputType::Static:
+        return InputType::Static;
+    case Settings::AudioInputType::Cubeb:
+        return InputType::Cubeb;
+    case Settings::AudioInputType::OpenAL:
+        return InputType::OpenAL;
+    }
+    return InputType::Auto;
+}
 
 std::string_view GetInputName(InputType input_type) {
     if (input_type == InputType::Auto) {

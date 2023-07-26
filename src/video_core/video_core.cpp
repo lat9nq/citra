@@ -40,7 +40,7 @@ void Init(Frontend::EmuWindow& emu_window, Frontend::EmuWindow* secondary_window
     case Settings::GraphicsAPI::Vulkan:
         g_renderer = std::make_unique<Vulkan::RendererVulkan>(system, emu_window, secondary_window);
         break;
-    case Settings::GraphicsAPI::OpenGL:
+    case Settings::GraphicsAPI::OpenGl:
         g_renderer = std::make_unique<OpenGL::RendererOpenGL>(system, emu_window, secondary_window);
         break;
     default:

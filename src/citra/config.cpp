@@ -14,6 +14,7 @@
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
+#include "core/hle/service/cam/cam_params.h"
 #include "core/hle/service/service.h"
 #include "input_common/main.h"
 #include "input_common/udp/client.h"

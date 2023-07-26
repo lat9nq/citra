@@ -8,6 +8,7 @@
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"
+#include "audio_core/sink_details.h"
 #include "common/arch.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
@@ -405,16 +406,16 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     kernel->SetRunningCPU(cpu_cores[0].get());
 
     const auto audio_emulation = Settings::values.audio_emulation.GetValue();
-    if (audio_emulation == Settings::AudioEmulation::HLE) {
+    if (audio_emulation == Settings::AudioEmulation::Hle) {
         dsp_core = std::make_unique<AudioCore::DspHle>(*memory, *timing);
     } else {
-        const bool multithread = audio_emulation == Settings::AudioEmulation::LLEMultithreaded;
+        const bool multithread = audio_emulation == Settings::AudioEmulation::LleMultithreaded;
         dsp_core = std::make_unique<AudioCore::DspLle>(*memory, *timing, multithread);
     }
 
     memory->SetDSP(*dsp_core);
 
-    dsp_core->SetSink(Settings::values.output_type.GetValue(),
+    dsp_core->SetSink(AudioCore::MapSinkTypeFromSetting(Settings::values.output_type.GetValue()),
                       Settings::values.output_device.GetValue());
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
 
@@ -638,8 +639,9 @@ void System::ApplySettings() {
 
     if (IsPoweredOn()) {
         CoreTiming().UpdateClockSpeed(Settings::values.cpu_clock_percentage.GetValue());
-        dsp_core->SetSink(Settings::values.output_type.GetValue(),
-                          Settings::values.output_device.GetValue());
+        dsp_core->SetSink(
+            AudioCore::MapSinkTypeFromSetting(Settings::values.output_type.GetValue()),
+            Settings::values.output_device.GetValue());
         dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
 
         auto hid = Service::HID::GetModule(*this);

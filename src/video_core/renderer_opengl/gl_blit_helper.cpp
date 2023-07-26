@@ -181,10 +181,10 @@ bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
     case TextureFilter::ScaleForce:
         FilterScaleForce(surface, blit);
         break;
-    case TextureFilter::xBRZ:
+    case TextureFilter::Xbrz:
         FilterXbrz(surface, blit);
         break;
-    case TextureFilter::MMPX:
+    case TextureFilter::Mmpx:
         FilterMMPX(surface, blit);
         break;
     default:

@@ -10,73 +10,12 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "audio_core/input_details.h"
-#include "audio_core/sink_details.h"
 #include "common/common_types.h"
-#include "core/hle/service/cam/cam_params.h"
+#include "common/settings_common.h"
+#include "common/settings_enums.h"
+#include "common/settings_setting.h"
 
 namespace Settings {
-
-enum class GraphicsAPI {
-    Software = 0,
-    OpenGL = 1,
-    Vulkan = 2,
-};
-
-enum class InitClock : u32 {
-    SystemTime = 0,
-    FixedTime = 1,
-};
-
-enum class LayoutOption : u32 {
-    Default,
-    SingleScreen,
-    LargeScreen,
-    SideScreen,
-#ifndef ANDROID
-    SeparateWindows,
-#endif
-    HybridScreen,
-    // Similiar to default, but better for mobile devices in portrait mode. Top screen in clamped to
-    // the top of the frame, and the bottom screen is enlarged to match the top screen.
-    MobilePortrait,
-
-    // Similiar to LargeScreen, but better for mobile devices in landscape mode. The screens are
-    // clamped to the top of the frame, and the bottom screen is a bit bigger.
-    MobileLandscape,
-};
-
-enum class StereoRenderOption : u32 {
-    Off = 0,
-    SideBySide = 1,
-    Anaglyph = 2,
-    Interlaced = 3,
-    ReverseInterlaced = 4,
-    CardboardVR = 5
-};
-
-// Which eye to render when 3d is off. 800px wide mode could be added here in the future, when
-// implemented
-enum class MonoRenderOption : u32 {
-    LeftEye = 0,
-    RightEye = 1,
-};
-
-enum class AudioEmulation : u32 {
-    HLE = 0,
-    LLE = 1,
-    LLEMultithreaded = 2,
-};
-
-enum class TextureFilter : u32 {
-    None = 0,
-    Anime4K = 1,
-    Bicubic = 2,
-    NearestNeighbor = 3,
-    ScaleForce = 4,
-    xBRZ = 5,
-    MMPX = 6
-};
 
 namespace NativeButton {
 
@@ -153,240 +92,6 @@ constexpr std::array<const char*, NumAnalogs> mapping = {{
 }};
 } // namespace NativeAnalog
 
-/** The Setting class is a simple resource manager. It defines a label and default value alongside
- * the actual value of the setting for simpler and less-error prone use with frontend
- * configurations. Specifying a default value and label is required. A minimum and maximum range can
- * be specified for sanitization.
- */
-template <typename Type, bool ranged = false>
-class Setting {
-protected:
-    Setting() = default;
-
-    /**
-     * Only sets the setting to the given initializer, leaving the other members to their default
-     * initializers.
-     *
-     * @param global_val Initial value of the setting
-     */
-    explicit Setting(const Type& val) : value{val} {}
-
-public:
-    /**
-     * Sets a default value, label, and setting value.
-     *
-     * @param default_val Intial value of the setting, and default value of the setting
-     * @param name Label for the setting
-     */
-    explicit Setting(const Type& default_val, const std::string& name)
-        requires(!ranged)
-        : value{default_val}, default_value{default_val}, label{name} {}
-    virtual ~Setting() = default;
-
-    /**
-     * Sets a default value, minimum value, maximum value, and label.
-     *
-     * @param default_val Intial value of the setting, and default value of the setting
-     * @param min_val Sets the minimum allowed value of the setting
-     * @param max_val Sets the maximum allowed value of the setting
-     * @param name Label for the setting
-     */
-    explicit Setting(const Type& default_val, const Type& min_val, const Type& max_val,
-                     const std::string& name)
-        requires(ranged)
-        : value{default_val},
-          default_value{default_val}, maximum{max_val}, minimum{min_val}, label{name} {}
-
-    /**
-     *  Returns a reference to the setting's value.
-     *
-     * @returns A reference to the setting
-     */
-    [[nodiscard]] virtual const Type& GetValue() const {
-        return value;
-    }
-
-    /**
-     * Sets the setting to the given value.
-     *
-     * @param val The desired value
-     */
-    virtual void SetValue(const Type& val) {
-        Type temp{ranged ? std::clamp(val, minimum, maximum) : val};
-        std::swap(value, temp);
-    }
-
-    /**
-     * Returns the value that this setting was created with.
-     *
-     * @returns A reference to the default value
-     */
-    [[nodiscard]] const Type& GetDefault() const {
-        return default_value;
-    }
-
-    /**
-     * Returns the label this setting was created with.
-     *
-     * @returns A reference to the label
-     */
-    [[nodiscard]] const std::string& GetLabel() const {
-        return label;
-    }
-
-    /**
-     * Assigns a value to the setting.
-     *
-     * @param val The desired setting value
-     *
-     * @returns A reference to the setting
-     */
-    virtual const Type& operator=(const Type& val) {
-        Type temp{ranged ? std::clamp(val, minimum, maximum) : val};
-        std::swap(value, temp);
-        return value;
-    }
-
-    /**
-     * Returns a reference to the setting.
-     *
-     * @returns A reference to the setting
-     */
-    explicit virtual operator const Type&() const {
-        return value;
-    }
-
-protected:
-    Type value{};               ///< The setting
-    const Type default_value{}; ///< The default value
-    const Type maximum{};       ///< Maximum allowed value of the setting
-    const Type minimum{};       ///< Minimum allowed value of the setting
-    const std::string label{};  ///< The setting's label
-};
-
-/**
- * The SwitchableSetting class is a slightly more complex version of the Setting class. This adds a
- * custom setting to switch to when a guest application specifically requires it. The effect is that
- * other components of the emulator can access the setting's intended value without any need for the
- * component to ask whether the custom or global setting is needed at the moment.
- *
- * By default, the global setting is used.
- */
-template <typename Type, bool ranged = false>
-class SwitchableSetting : virtual public Setting<Type, ranged> {
-public:
-    /**
-     * Sets a default value, label, and setting value.
-     *
-     * @param default_val Intial value of the setting, and default value of the setting
-     * @param name Label for the setting
-     */
-    explicit SwitchableSetting(const Type& default_val, const std::string& name)
-        requires(!ranged)
-        : Setting<Type>{default_val, name} {}
-    virtual ~SwitchableSetting() = default;
-
-    /**
-     * Sets a default value, minimum value, maximum value, and label.
-     *
-     * @param default_val Intial value of the setting, and default value of the setting
-     * @param min_val Sets the minimum allowed value of the setting
-     * @param max_val Sets the maximum allowed value of the setting
-     * @param name Label for the setting
-     */
-    explicit SwitchableSetting(const Type& default_val, const Type& min_val, const Type& max_val,
-                               const std::string& name)
-        requires(ranged)
-        : Setting<Type, true>{default_val, min_val, max_val, name} {}
-
-    /**
-     * Tells this setting to represent either the global or custom setting when other member
-     * functions are used.
-     *
-     * @param to_global Whether to use the global or custom setting.
-     */
-    void SetGlobal(bool to_global) {
-        use_global = to_global;
-    }
-
-    /**
-     * Returns whether this setting is using the global setting or not.
-     *
-     * @returns The global state
-     */
-    [[nodiscard]] bool UsingGlobal() const {
-        return use_global;
-    }
-
-    /**
-     * Returns either the global or custom setting depending on the values of this setting's global
-     * state or if the global value was specifically requested.
-     *
-     * @param need_global Request global value regardless of setting's state; defaults to false
-     *
-     * @returns The required value of the setting
-     */
-    [[nodiscard]] virtual const Type& GetValue() const override {
-        if (use_global) {
-            return this->value;
-        }
-        return custom;
-    }
-    [[nodiscard]] virtual const Type& GetValue(bool need_global) const {
-        if (use_global || need_global) {
-            return this->value;
-        }
-        return custom;
-    }
-
-    /**
-     * Sets the current setting value depending on the global state.
-     *
-     * @param val The new value
-     */
-    void SetValue(const Type& val) override {
-        Type temp{ranged ? std::clamp(val, this->minimum, this->maximum) : val};
-        if (use_global) {
-            std::swap(this->value, temp);
-        } else {
-            std::swap(custom, temp);
-        }
-    }
-
-    /**
-     * Assigns the current setting value depending on the global state.
-     *
-     * @param val The new value
-     *
-     * @returns A reference to the current setting value
-     */
-    const Type& operator=(const Type& val) override {
-        Type temp{ranged ? std::clamp(val, this->minimum, this->maximum) : val};
-        if (use_global) {
-            std::swap(this->value, temp);
-            return this->value;
-        }
-        std::swap(custom, temp);
-        return custom;
-    }
-
-    /**
-     * Returns the current setting value depending on the global state.
-     *
-     * @returns A reference to the current setting value
-     */
-    virtual explicit operator const Type&() const override {
-        if (use_global) {
-            return this->value;
-        }
-        return custom;
-    }
-
-protected:
-    bool use_global{true}; ///< The setting's global state
-    Type custom{};         ///< The custom value of the setting
-};
-
 struct InputProfile {
     std::string name;
     std::array<std::string, NativeButton::NumButtons> buttons;
@@ -409,7 +114,11 @@ struct TouchFromButtonMap {
 /// value to fit the region lockout info of the game
 static constexpr s32 REGION_VALUE_AUTO_SELECT = -1;
 
+static constexpr u32 CAMERA_COUNT = 3;
+
 struct Values {
+    Linkage linkage{};
+
     // Controls
     InputProfile current_input_profile;       ///< The current input profile
     int current_input_profile_index;          ///< The current input profile index
@@ -417,102 +126,126 @@ struct Values {
     std::vector<TouchFromButtonMap> touch_from_button_maps;
 
     // Core
-    Setting<bool> use_cpu_jit{true, "use_cpu_jit"};
-    SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, "cpu_clock_percentage"};
-    SwitchableSetting<bool> is_new_3ds{true, "is_new_3ds"};
+    Setting<bool> use_cpu_jit{linkage, true, "use_cpu_jit", Category::Core};
+    SwitchableSetting<s32, true> cpu_clock_percentage{
+        linkage, 100, 5, 400, "cpu_clock_percentage", Category::Core};
+    SwitchableSetting<bool> is_new_3ds{linkage, true, "is_new_3ds", Category::Core};
 
     // Data Storage
-    Setting<bool> use_virtual_sd{true, "use_virtual_sd"};
-    Setting<bool> use_custom_storage{false, "use_custom_storage"};
+    Setting<bool> use_virtual_sd{linkage, true, "use_virtual_sd", Category::DataStorage};
+    Setting<bool> use_custom_storage{linkage, false, "use_custom_storage", Category::DataStorage};
 
     // System
-    SwitchableSetting<s32> region_value{REGION_VALUE_AUTO_SELECT, "region_value"};
-    Setting<InitClock> init_clock{InitClock::SystemTime, "init_clock"};
-    Setting<u64> init_time{946681277ULL, "init_time"};
-    Setting<s64> init_time_offset{0, "init_time_offset"};
-    Setting<bool> plugin_loader_enabled{false, "plugin_loader"};
-    Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
+    SwitchableSetting<s32> region_value{linkage, REGION_VALUE_AUTO_SELECT, "region_value",
+                                        Category::System};
+    Setting<InitClock> init_clock{linkage, InitClock::SystemTime, "init_clock", Category::System};
+    Setting<u64> init_time{linkage, 946681277ULL, "init_time", Category::System};
+    Setting<s64> init_time_offset{linkage, 0, "init_time_offset", Category::System};
+    Setting<bool> plugin_loader_enabled{linkage, false, "plugin_loader", Category::System};
+    Setting<bool> allow_plugin_loader{linkage, true, "allow_plugin_loader", Category::System};
 
     // Renderer
-    SwitchableSetting<GraphicsAPI, true> graphics_api{GraphicsAPI::OpenGL, GraphicsAPI::Software,
-                                                      GraphicsAPI::Vulkan, "graphics_api"};
-    SwitchableSetting<u32> physical_device{0, "physical_device"};
-    Setting<bool> use_gles{false, "use_gles"};
-    Setting<bool> renderer_debug{false, "renderer_debug"};
-    Setting<bool> dump_command_buffers{false, "dump_command_buffers"};
-    SwitchableSetting<bool> spirv_shader_gen{true, "spirv_shader_gen"};
-    SwitchableSetting<bool> async_shader_compilation{false, "async_shader_compilation"};
-    SwitchableSetting<bool> async_presentation{true, "async_presentation"};
-    SwitchableSetting<bool> use_hw_shader{true, "use_hw_shader"};
-    SwitchableSetting<bool> use_disk_shader_cache{true, "use_disk_shader_cache"};
-    SwitchableSetting<bool> shaders_accurate_mul{true, "shaders_accurate_mul"};
-    SwitchableSetting<bool> use_vsync_new{true, "use_vsync_new"};
-    Setting<bool> use_shader_jit{true, "use_shader_jit"};
-    SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
-    SwitchableSetting<u16, true> frame_limit{100, 0, 1000, "frame_limit"};
-    SwitchableSetting<TextureFilter> texture_filter{TextureFilter::None, "texture_filter"};
+    SwitchableSetting<GraphicsAPI, true> graphics_api{
+        linkage,
+        GraphicsAPI::OpenGl,
+        GraphicsAPI::Software,
+        static_cast<GraphicsAPI>(static_cast<u32>(GraphicsAPI::ApiCount) - 1),
+        "graphics_api",
+        Category::Renderer};
+    SwitchableSetting<u32> physical_device{linkage, 0, "physical_device", Category::Renderer};
+    Setting<bool> use_gles{linkage, false, "use_gles", Category::Renderer};
+    Setting<bool> renderer_debug{linkage, false, "renderer_debug", Category::Renderer};
+    Setting<bool> dump_command_buffers{linkage, false, "dump_command_buffers", Category::Renderer};
+    SwitchableSetting<bool> spirv_shader_gen{linkage, true, "spirv_shader_gen", Category::Renderer};
+    SwitchableSetting<bool> async_shader_compilation{linkage, false, "async_shader_compilation",
+                                                     Category::Renderer};
+    SwitchableSetting<bool> async_presentation{linkage, true, "async_presentation",
+                                               Category::Renderer};
+    SwitchableSetting<bool> use_hw_shader{linkage, true, "use_hw_shader", Category::Renderer};
+    SwitchableSetting<bool> use_disk_shader_cache{linkage, true, "use_disk_shader_cache",
+                                                  Category::Renderer};
+    SwitchableSetting<bool> shaders_accurate_mul{linkage, true, "shaders_accurate_mul",
+                                                 Category::Renderer};
+    SwitchableSetting<bool> use_vsync_new{linkage, true, "use_vsync_new", Category::Renderer};
+    Setting<bool> use_shader_jit{linkage, true, "use_shader_jit", Category::Renderer};
+    SwitchableSetting<u32, true> resolution_factor{linkage,           1, 0, 10, "resolution_factor",
+                                                   Category::Renderer};
+    SwitchableSetting<u16, true> frame_limit{linkage, 100,           0,
+                                             1000,    "frame_limit", Category::Renderer};
+    SwitchableSetting<TextureFilter> texture_filter{linkage, TextureFilter::None, "texture_filter",
+                                                    Category::Renderer};
 
-    SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, "layout_option"};
-    SwitchableSetting<bool> swap_screen{false, "swap_screen"};
-    SwitchableSetting<bool> upright_screen{false, "upright_screen"};
-    SwitchableSetting<float, true> large_screen_proportion{4.f, 1.f, 16.f,
-                                                           "large_screen_proportion"};
-    Setting<bool> custom_layout{false, "custom_layout"};
-    Setting<u16> custom_top_left{0, "custom_top_left"};
-    Setting<u16> custom_top_top{0, "custom_top_top"};
-    Setting<u16> custom_top_right{400, "custom_top_right"};
-    Setting<u16> custom_top_bottom{240, "custom_top_bottom"};
-    Setting<u16> custom_bottom_left{40, "custom_bottom_left"};
-    Setting<u16> custom_bottom_top{240, "custom_bottom_top"};
-    Setting<u16> custom_bottom_right{360, "custom_bottom_right"};
-    Setting<u16> custom_bottom_bottom{480, "custom_bottom_bottom"};
-    Setting<u16> custom_second_layer_opacity{100, "custom_second_layer_opacity"};
+    SwitchableSetting<LayoutOption> layout_option{linkage, LayoutOption::Default, "layout_option",
+                                                  Category::Renderer};
+    SwitchableSetting<bool> swap_screen{linkage, false, "swap_screen", Category::Renderer};
+    SwitchableSetting<bool> upright_screen{linkage, false, "upright_screen", Category::Renderer};
+    SwitchableSetting<float, true> large_screen_proportion{
+        linkage, 4.f, 1.f, 16.f, "large_screen_proportion", Category::Renderer};
+    Setting<bool> custom_layout{linkage, false, "custom_layout", Category::Renderer};
+    Setting<u16> custom_top_left{linkage, 0, "custom_top_left", Category::Renderer};
+    Setting<u16> custom_top_top{linkage, 0, "custom_top_top", Category::Renderer};
+    Setting<u16> custom_top_right{linkage, 400, "custom_top_right", Category::Renderer};
+    Setting<u16> custom_top_bottom{linkage, 240, "custom_top_bottom", Category::Renderer};
+    Setting<u16> custom_bottom_left{linkage, 40, "custom_bottom_left", Category::Renderer};
+    Setting<u16> custom_bottom_top{linkage, 240, "custom_bottom_top", Category::Renderer};
+    Setting<u16> custom_bottom_right{linkage, 360, "custom_bottom_right", Category::Renderer};
+    Setting<u16> custom_bottom_bottom{linkage, 480, "custom_bottom_bottom", Category::Renderer};
+    Setting<u16> custom_second_layer_opacity{linkage, 100, "custom_second_layer_opacity",
+                                             Category::Renderer};
 
-    SwitchableSetting<float> bg_red{0.f, "bg_red"};
-    SwitchableSetting<float> bg_green{0.f, "bg_green"};
-    SwitchableSetting<float> bg_blue{0.f, "bg_blue"};
+    SwitchableSetting<float> bg_red{linkage, 0.f, "bg_red", Category::Renderer};
+    SwitchableSetting<float> bg_green{linkage, 0.f, "bg_green", Category::Renderer};
+    SwitchableSetting<float> bg_blue{linkage, 0.f, "bg_blue", Category::Renderer};
 
-    SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, "render_3d"};
-    SwitchableSetting<u32> factor_3d{0, "factor_3d"};
-    SwitchableSetting<MonoRenderOption> mono_render_option{MonoRenderOption::LeftEye,
-                                                           "mono_render_option"};
+    SwitchableSetting<StereoRenderOption> render_3d{linkage, StereoRenderOption::Off, "render_3d",
+                                                    Category::Renderer};
+    SwitchableSetting<u32> factor_3d{linkage, 0, "factor_3d", Category::Renderer};
+    SwitchableSetting<MonoRenderOption> mono_render_option{
+        linkage, MonoRenderOption::LeftEye, "mono_render_option", Category::Renderer};
 
-    Setting<u32> cardboard_screen_size{85, "cardboard_screen_size"};
-    Setting<s32> cardboard_x_shift{0, "cardboard_x_shift"};
-    Setting<s32> cardboard_y_shift{0, "cardboard_y_shift"};
+    Setting<u32> cardboard_screen_size{linkage, 85, "cardboard_screen_size", Category::Renderer};
+    Setting<s32> cardboard_x_shift{linkage, 0, "cardboard_x_shift", Category::Renderer};
+    Setting<s32> cardboard_y_shift{linkage, 0, "cardboard_y_shift", Category::Renderer};
 
-    SwitchableSetting<bool> filter_mode{true, "filter_mode"};
-    SwitchableSetting<std::string> pp_shader_name{"none (builtin)", "pp_shader_name"};
-    SwitchableSetting<std::string> anaglyph_shader_name{"dubois (builtin)", "anaglyph_shader_name"};
+    SwitchableSetting<bool> filter_mode{linkage, true, "filter_mode", Category::Renderer};
+    SwitchableSetting<std::string> pp_shader_name{linkage, "none (builtin)", "pp_shader_name",
+                                                  Category::Renderer};
+    SwitchableSetting<std::string> anaglyph_shader_name{linkage, "dubois (builtin)",
+                                                        "anaglyph_shader_name", Category::Renderer};
 
-    SwitchableSetting<bool> dump_textures{false, "dump_textures"};
-    SwitchableSetting<bool> custom_textures{false, "custom_textures"};
-    SwitchableSetting<bool> preload_textures{false, "preload_textures"};
-    SwitchableSetting<bool> async_custom_loading{true, "async_custom_loading"};
+    SwitchableSetting<bool> dump_textures{linkage, false, "dump_textures", Category::Renderer};
+    SwitchableSetting<bool> custom_textures{linkage, false, "custom_textures", Category::Renderer};
+    SwitchableSetting<bool> preload_textures{linkage, false, "preload_textures",
+                                             Category::Renderer};
+    SwitchableSetting<bool> async_custom_loading{linkage, true, "async_custom_loading",
+                                                 Category::Renderer};
 
     // Audio
     bool audio_muted;
-    SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, "audio_emulation"};
-    SwitchableSetting<bool> enable_audio_stretching{true, "enable_audio_stretching"};
-    SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, "volume"};
-    Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, "output_type"};
-    Setting<std::string> output_device{"auto", "output_device"};
-    Setting<AudioCore::InputType> input_type{AudioCore::InputType::Auto, "input_type"};
-    Setting<std::string> input_device{"auto", "input_device"};
+    SwitchableSetting<AudioEmulation> audio_emulation{linkage, AudioEmulation::Hle,
+                                                      "audio_emulation", Category::Audio};
+    SwitchableSetting<bool> enable_audio_stretching{linkage, true, "enable_audio_stretching",
+                                                    Category::Audio};
+    SwitchableSetting<float, true> volume{linkage, 1.f, 0.f, 1.f, "volume", Category::Audio};
+    Setting<AudioEngine> output_type{linkage, AudioEngine::Auto, "output_type", Category::Audio};
+    Setting<std::string> output_device{linkage, "auto", "output_device", Category::Audio};
+    Setting<AudioInputType> input_type{linkage, AudioInputType::Auto, "input_type",
+                                       Category::Audio};
+    Setting<std::string> input_device{linkage, "auto", "input_device", Category::Audio};
 
     // Camera
-    std::array<std::string, Service::CAM::NumCameras> camera_name;
-    std::array<std::string, Service::CAM::NumCameras> camera_config;
-    std::array<int, Service::CAM::NumCameras> camera_flip;
+    std::array<std::string, CAMERA_COUNT> camera_name;
+    std::array<std::string, CAMERA_COUNT> camera_config;
+    std::array<int, CAMERA_COUNT> camera_flip;
 
     // Debugging
     bool record_frame_times;
     std::unordered_map<std::string, bool> lle_modules;
-    Setting<bool> use_gdbstub{false, "use_gdbstub"};
-    Setting<u16> gdbstub_port{24689, "gdbstub_port"};
+    Setting<bool> use_gdbstub{linkage, false, "use_gdbstub", Category::Debugging};
+    Setting<u16> gdbstub_port{linkage, 24689, "gdbstub_port", Category::Debugging};
 
     // Miscellaneous
-    Setting<std::string> log_filter{"*:Info", "log_filter"};
+    Setting<std::string> log_filter{linkage, "*:Info", "log_filter", Category::Miscellaneous};
 
     // Video Dumping
     std::string output_format;

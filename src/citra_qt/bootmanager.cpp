@@ -621,10 +621,11 @@ bool GRenderWindow::InitRenderTarget() {
 
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     switch (graphics_api) {
+    default:
     case Settings::GraphicsAPI::Software:
         InitializeSoftware();
         break;
-    case Settings::GraphicsAPI::OpenGL:
+    case Settings::GraphicsAPI::OpenGl:
         if (!InitializeOpenGL() || !LoadOpenGL()) {
             return false;
         }
@@ -790,7 +791,7 @@ void GRenderWindow::showEvent(QShowEvent* event) {
 std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::CreateSharedContext() const {
 #ifdef HAS_OPENGL
     const auto graphics_api = Settings::values.graphics_api.GetValue();
-    if (graphics_api == Settings::GraphicsAPI::OpenGL) {
+    if (graphics_api == Settings::GraphicsAPI::OpenGl) {
         auto gl_context = static_cast<OpenGLSharedContext*>(main_context.get());
         // Bind the shared contexts to the main surface in case the backend wants to take over
         // presentation

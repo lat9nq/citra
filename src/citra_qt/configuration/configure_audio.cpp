@@ -10,6 +10,8 @@
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_audio.h"
 #include "common/settings.h"
+#include "common/settings_enums.h"
+#include "core/core.h"
 #include "ui_configure_audio.h"
 
 #if defined(__APPLE__)
@@ -142,10 +144,10 @@ void ConfigureAudio::ApplyConfiguration() {
 
     if (Settings::IsConfiguringGlobal()) {
         Settings::values.output_type =
-            static_cast<AudioCore::SinkType>(ui->output_type_combo_box->currentIndex());
+            static_cast<Settings::AudioEngine>(ui->output_type_combo_box->currentIndex());
         Settings::values.output_device = ui->output_device_combo_box->currentText().toStdString();
         Settings::values.input_type =
-            static_cast<AudioCore::InputType>(ui->input_type_combo_box->currentIndex());
+            static_cast<Settings::AudioInputType>(ui->input_type_combo_box->currentIndex());
         Settings::values.input_device = ui->input_device_combo_box->currentText().toStdString();
     }
 }

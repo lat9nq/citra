@@ -8,6 +8,7 @@
 #include <vector>
 #include "audio_core/null_sink.h"
 #include "audio_core/sink_details.h"
+#include "common/settings_enums.h"
 #ifdef HAVE_SDL2
 #include "audio_core/sdl2_sink.h"
 #endif
@@ -82,6 +83,24 @@ const SinkDetails& GetSinkDetails(SinkType sink_type) {
     return *iter;
 }
 } // Anonymous namespace
+
+SinkType MapSinkTypeFromSetting(Settings::AudioEngine value) {
+    switch (value) {
+    case Settings::AudioEngine::MaxEnum:
+    case Settings::AudioEngine::Auto:
+        return SinkType::Auto;
+    case Settings::AudioEngine::Null:
+        return SinkType::Null;
+    case Settings::AudioEngine::Cubeb:
+        return SinkType::Cubeb;
+    case Settings::AudioEngine::OpenAL:
+        return SinkType::OpenAL;
+    case Settings::AudioEngine::Sdl2:
+        return SinkType::SDL2;
+        break;
+    }
+    return SinkType::Auto;
+}
 
 std::string_view GetSinkName(SinkType sink_type) {
     if (sink_type == SinkType::Auto) {

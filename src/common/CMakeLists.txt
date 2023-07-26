@@ -118,6 +118,10 @@ add_library(citra_common STATIC
     scope_exit.h
     settings.cpp
     settings.h
+    settings_common.cpp
+    settings_common.h
+    settings_enums.h
+    settings_setting.h
     slot_vector.h
     serialization/atomic.h
     serialization/boost_discrete_interval.hpp

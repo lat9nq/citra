@@ -7,6 +7,7 @@
 #include "audio_core/dsp_interface.h"
 #include "common/file_util.h"
 #include "common/settings.h"
+#include "core/hle/service/cam/cam.h"
 
 namespace Settings {
 
@@ -14,11 +15,11 @@ namespace {
 
 std::string_view GetAudioEmulationName(AudioEmulation emulation) {
     switch (emulation) {
-    case AudioEmulation::HLE:
+    case AudioEmulation::Hle:
         return "HLE";
-    case AudioEmulation::LLE:
+    case AudioEmulation::Lle:
         return "LLE";
-    case AudioEmulation::LLEMultithreaded:
+    case AudioEmulation::LleMultithreaded:
         return "LLE Multithreaded";
     default:
         return "Invalid";
@@ -29,7 +30,7 @@ std::string_view GetGraphicsAPIName(GraphicsAPI api) {
     switch (api) {
     case GraphicsAPI::Software:
         return "Software";
-    case GraphicsAPI::OpenGL:
+    case GraphicsAPI::OpenGl:
         return "OpenGL";
     case GraphicsAPI::Vulkan:
         return "Vulkan";
@@ -50,9 +51,9 @@ std::string_view GetTextureFilterName(TextureFilter filter) {
         return "NearestNeighbor";
     case TextureFilter::ScaleForce:
         return "ScaleForce";
-    case TextureFilter::xBRZ:
+    case TextureFilter::Xbrz:
         return "xBRZ";
-    case TextureFilter::MMPX:
+    case TextureFilter::Mmpx:
         return "MMPX";
     default:
         return "Invalid";

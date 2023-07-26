@@ -9,6 +9,7 @@
 #include <string_view>
 #include <vector>
 #include "common/common_types.h"
+#include "common/settings_enums.h"
 
 namespace AudioCore {
 
@@ -23,6 +24,8 @@ enum class InputType : u32 {
 
     NumInputTypes,
 };
+
+InputType MapInputTypeFromSetting(Settings::AudioInputType value);
 
 /// Gets the name of a input type.
 std::string_view GetInputName(InputType input_type);

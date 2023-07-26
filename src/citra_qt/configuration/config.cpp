@@ -9,6 +9,7 @@
 #include "citra_qt/configuration/config.h"
 #include "common/file_util.h"
 #include "common/settings.h"
+#include "core/hle/service/cam/cam_params.h"
 #include "core/hle/service/service.h"
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
