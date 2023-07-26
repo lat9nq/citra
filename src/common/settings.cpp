@@ -154,43 +154,9 @@ void RestoreGlobalState(bool is_powered_on) {
         return;
     }
 
-    // Audio
-    values.audio_emulation.SetGlobal(true);
-    values.enable_audio_stretching.SetGlobal(true);
-    values.volume.SetGlobal(true);
-
-    // Core
-    values.cpu_clock_percentage.SetGlobal(true);
-    values.is_new_3ds.SetGlobal(true);
-
-    // Renderer
-    values.graphics_api.SetGlobal(true);
-    values.physical_device.SetGlobal(true);
-    values.spirv_shader_gen.SetGlobal(true);
-    values.async_shader_compilation.SetGlobal(true);
-    values.async_presentation.SetGlobal(true);
-    values.use_hw_shader.SetGlobal(true);
-    values.use_disk_shader_cache.SetGlobal(true);
-    values.shaders_accurate_mul.SetGlobal(true);
-    values.use_vsync_new.SetGlobal(true);
-    values.resolution_factor.SetGlobal(true);
-    values.frame_limit.SetGlobal(true);
-    values.texture_filter.SetGlobal(true);
-    values.layout_option.SetGlobal(true);
-    values.swap_screen.SetGlobal(true);
-    values.upright_screen.SetGlobal(true);
-    values.large_screen_proportion.SetGlobal(true);
-    values.bg_red.SetGlobal(true);
-    values.bg_green.SetGlobal(true);
-    values.bg_blue.SetGlobal(true);
-    values.render_3d.SetGlobal(true);
-    values.factor_3d.SetGlobal(true);
-    values.filter_mode.SetGlobal(true);
-    values.pp_shader_name.SetGlobal(true);
-    values.anaglyph_shader_name.SetGlobal(true);
-    values.dump_textures.SetGlobal(true);
-    values.custom_textures.SetGlobal(true);
-    values.preload_textures.SetGlobal(true);
+    for (const auto& func : values.linkage.restore_functions) {
+        func();
+    }
 }
 
 void LoadProfile(int index) {
