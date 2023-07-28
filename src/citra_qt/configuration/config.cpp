@@ -9,6 +9,7 @@
 #include "citra_qt/configuration/config.h"
 #include "common/file_util.h"
 #include "common/settings.h"
+#include "common/settings_common.h"
 #include "core/hle/service/cam/cam_params.h"
 #include "core/hle/service/service.h"
 #include "input_common/main.h"
@@ -270,16 +271,7 @@ void Config::ReadValues() {
 void Config::ReadAudioValues() {
     qt_config->beginGroup(QStringLiteral("Audio"));
 
-    ReadGlobalSetting(Settings::values.audio_emulation);
-    ReadGlobalSetting(Settings::values.enable_audio_stretching);
-    ReadGlobalSetting(Settings::values.volume);
-
-    if (global) {
-        ReadBasicSetting(Settings::values.output_type);
-        ReadBasicSetting(Settings::values.output_device);
-        ReadBasicSetting(Settings::values.input_type);
-        ReadBasicSetting(Settings::values.input_device);
-    }
+    ReadCategory(Settings::Category::Audio);
 
     qt_config->endGroup();
 }
@@ -436,10 +428,7 @@ void Config::ReadControlValues() {
 void Config::ReadUtilityValues() {
     qt_config->beginGroup(QStringLiteral("Utility"));
 
-    ReadGlobalSetting(Settings::values.dump_textures);
-    ReadGlobalSetting(Settings::values.custom_textures);
-    ReadGlobalSetting(Settings::values.preload_textures);
-    ReadGlobalSetting(Settings::values.async_custom_loading);
+    ReadCategory(Settings::Category::Utility);
 
     qt_config->endGroup();
 }
@@ -447,11 +436,7 @@ void Config::ReadUtilityValues() {
 void Config::ReadCoreValues() {
     qt_config->beginGroup(QStringLiteral("Core"));
 
-    ReadGlobalSetting(Settings::values.cpu_clock_percentage);
-
-    if (global) {
-        ReadBasicSetting(Settings::values.use_cpu_jit);
-    }
+    ReadCategory(Settings::Category::Core);
 
     qt_config->endGroup();
 }
@@ -459,8 +444,7 @@ void Config::ReadCoreValues() {
 void Config::ReadDataStorageValues() {
     qt_config->beginGroup(QStringLiteral("Data Storage"));
 
-    ReadBasicSetting(Settings::values.use_virtual_sd);
-    ReadBasicSetting(Settings::values.use_custom_storage);
+    ReadCategory(Settings::Category::DataStorage);
 
     const std::string nand_dir =
         ReadSetting(QStringLiteral("nand_directory"), QStringLiteral("")).toString().toStdString();
@@ -481,10 +465,8 @@ void Config::ReadDebuggingValues() {
     // Intentionally not using the QT default setting as this is intended to be changed in the ini
     Settings::values.record_frame_times =
         qt_config->value(QStringLiteral("record_frame_times"), false).toBool();
-    ReadBasicSetting(Settings::values.use_gdbstub);
-    ReadBasicSetting(Settings::values.gdbstub_port);
-    ReadBasicSetting(Settings::values.renderer_debug);
-    ReadBasicSetting(Settings::values.dump_command_buffers);
+
+    ReadCategory(Settings::Category::Debugging);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Service::service_module_map) {
@@ -498,29 +480,7 @@ void Config::ReadDebuggingValues() {
 void Config::ReadLayoutValues() {
     qt_config->beginGroup(QStringLiteral("Layout"));
 
-    ReadGlobalSetting(Settings::values.render_3d);
-    ReadGlobalSetting(Settings::values.factor_3d);
-    ReadGlobalSetting(Settings::values.filter_mode);
-    ReadGlobalSetting(Settings::values.pp_shader_name);
-    ReadGlobalSetting(Settings::values.anaglyph_shader_name);
-    ReadGlobalSetting(Settings::values.layout_option);
-    ReadGlobalSetting(Settings::values.swap_screen);
-    ReadGlobalSetting(Settings::values.upright_screen);
-    ReadGlobalSetting(Settings::values.large_screen_proportion);
-
-    if (global) {
-        ReadBasicSetting(Settings::values.mono_render_option);
-        ReadBasicSetting(Settings::values.custom_layout);
-        ReadBasicSetting(Settings::values.custom_top_left);
-        ReadBasicSetting(Settings::values.custom_top_top);
-        ReadBasicSetting(Settings::values.custom_top_right);
-        ReadBasicSetting(Settings::values.custom_top_bottom);
-        ReadBasicSetting(Settings::values.custom_bottom_left);
-        ReadBasicSetting(Settings::values.custom_bottom_top);
-        ReadBasicSetting(Settings::values.custom_bottom_right);
-        ReadBasicSetting(Settings::values.custom_bottom_bottom);
-        ReadBasicSetting(Settings::values.custom_second_layer_opacity);
-    }
+    ReadCategory(Settings::Category::Layout);
 
     qt_config->endGroup();
 }
@@ -528,7 +488,7 @@ void Config::ReadLayoutValues() {
 void Config::ReadMiscellaneousValues() {
     qt_config->beginGroup(QStringLiteral("Miscellaneous"));
 
-    ReadBasicSetting(Settings::values.log_filter);
+    ReadCategory(Settings::Category::Miscellaneous);
 
     qt_config->endGroup();
 }
@@ -578,7 +538,7 @@ void Config::ReadMultiplayerValues() {
 void Config::ReadPathValues() {
     qt_config->beginGroup(QStringLiteral("Paths"));
 
-    ReadGlobalSetting(UISettings::values.screenshot_path);
+    ReadCategory(Settings::Category::Screenshots);
 
     if (global) {
         UISettings::values.roms_path = ReadSetting(QStringLiteral("romsPath")).toString();
@@ -628,27 +588,7 @@ void Config::ReadPathValues() {
 void Config::ReadRendererValues() {
     qt_config->beginGroup(QStringLiteral("Renderer"));
 
-    ReadGlobalSetting(Settings::values.graphics_api);
-    ReadGlobalSetting(Settings::values.physical_device);
-    ReadGlobalSetting(Settings::values.spirv_shader_gen);
-    ReadGlobalSetting(Settings::values.async_shader_compilation);
-    ReadGlobalSetting(Settings::values.async_presentation);
-    ReadGlobalSetting(Settings::values.use_hw_shader);
-    ReadGlobalSetting(Settings::values.shaders_accurate_mul);
-    ReadGlobalSetting(Settings::values.use_disk_shader_cache);
-    ReadGlobalSetting(Settings::values.use_vsync_new);
-    ReadGlobalSetting(Settings::values.resolution_factor);
-    ReadGlobalSetting(Settings::values.frame_limit);
-
-    ReadGlobalSetting(Settings::values.bg_red);
-    ReadGlobalSetting(Settings::values.bg_green);
-    ReadGlobalSetting(Settings::values.bg_blue);
-
-    ReadGlobalSetting(Settings::values.texture_filter);
-
-    if (global) {
-        ReadBasicSetting(Settings::values.use_shader_jit);
-    }
+    ReadCategory(Settings::Category::Renderer);
 
     qt_config->endGroup();
 }
@@ -677,16 +617,7 @@ void Config::ReadShortcutValues() {
 void Config::ReadSystemValues() {
     qt_config->beginGroup(QStringLiteral("System"));
 
-    ReadGlobalSetting(Settings::values.is_new_3ds);
-    ReadGlobalSetting(Settings::values.region_value);
-
-    if (global) {
-        ReadBasicSetting(Settings::values.init_clock);
-        ReadBasicSetting(Settings::values.init_time);
-        ReadBasicSetting(Settings::values.init_time_offset);
-        ReadBasicSetting(Settings::values.plugin_loader_enabled);
-        ReadBasicSetting(Settings::values.allow_plugin_loader);
-    }
+    ReadCategory(Settings::Category::System);
 
     qt_config->endGroup();
 }
@@ -739,31 +670,19 @@ void Config::ReadUIValues() {
 
     ReadPathValues();
 
+    ReadCategory(Settings::Category::Ui);
+    ReadCategory(Settings::Category::UiGeneral);
+
     if (global) {
         UISettings::values.theme =
             ReadSetting(QStringLiteral("theme"), QString::fromUtf8(UISettings::themes[0].second))
                 .toString();
-        ReadBasicSetting(UISettings::values.enable_discord_presence);
-        ReadBasicSetting(UISettings::values.screenshot_resolution_factor);
 
         ReadUpdaterValues();
         ReadUILayoutValues();
         ReadUIGameListValues();
         ReadShortcutValues();
         ReadMultiplayerValues();
-
-        ReadBasicSetting(UISettings::values.single_window_mode);
-        ReadBasicSetting(UISettings::values.fullscreen);
-        ReadBasicSetting(UISettings::values.display_titlebar);
-        ReadBasicSetting(UISettings::values.show_filter_bar);
-        ReadBasicSetting(UISettings::values.show_status_bar);
-        ReadBasicSetting(UISettings::values.confirm_before_closing);
-        ReadBasicSetting(UISettings::values.save_state_warning);
-        ReadBasicSetting(UISettings::values.first_start);
-        ReadBasicSetting(UISettings::values.callout_flags);
-        ReadBasicSetting(UISettings::values.show_console);
-        ReadBasicSetting(UISettings::values.pause_when_in_background);
-        ReadBasicSetting(UISettings::values.hide_mouse);
     }
 
     qt_config->endGroup();
@@ -772,16 +691,7 @@ void Config::ReadUIValues() {
 void Config::ReadUIGameListValues() {
     qt_config->beginGroup(QStringLiteral("GameList"));
 
-    ReadBasicSetting(UISettings::values.game_list_icon_size);
-    ReadBasicSetting(UISettings::values.game_list_row_1);
-    ReadBasicSetting(UISettings::values.game_list_row_2);
-    ReadBasicSetting(UISettings::values.game_list_hide_no_icon);
-    ReadBasicSetting(UISettings::values.game_list_single_line_mode);
-
-    ReadBasicSetting(UISettings::values.show_compat_column);
-    ReadBasicSetting(UISettings::values.show_region_column);
-    ReadBasicSetting(UISettings::values.show_type_column);
-    ReadBasicSetting(UISettings::values.show_size_column);
+    ReadCategory(Settings::Category::UiUpdater);
 
     qt_config->endGroup();
 }
@@ -797,7 +707,8 @@ void Config::ReadUILayoutValues() {
         ReadSetting(QStringLiteral("gameListHeaderState")).toByteArray();
     UISettings::values.microprofile_geometry =
         ReadSetting(QStringLiteral("microProfileDialogGeometry")).toByteArray();
-    ReadBasicSetting(UISettings::values.microprofile_visible);
+
+    ReadCategory(Settings::Category::UiLayout);
 
     qt_config->endGroup();
 }
@@ -805,8 +716,7 @@ void Config::ReadUILayoutValues() {
 void Config::ReadUpdaterValues() {
     qt_config->beginGroup(QStringLiteral("Updater"));
 
-    ReadBasicSetting(UISettings::values.check_for_update_on_start);
-    ReadBasicSetting(UISettings::values.update_on_close);
+    ReadCategory(Settings::Category::UiUpdater);
 
     qt_config->endGroup();
 }
@@ -1289,6 +1199,69 @@ void Config::SaveWebServiceValues() {
                  QString::fromStdString(NetSettings::values.citra_token));
 
     qt_config->endGroup();
+}
+
+static auto FindRelevantList(Settings::Category category) {
+    auto& map = Settings::values.linkage.by_category;
+    if (map.contains(category)) {
+        return Settings::values.linkage.by_category[category];
+    }
+    return UISettings::values.linkage.by_category[category];
+}
+
+void Config::ReadCategory(Settings::Category category) {
+    const auto& settings = FindRelevantList(category);
+    std::for_each(settings.begin(), settings.end(),
+                  [&](const auto& setting) { ReadSettingGeneric(setting); });
+}
+
+void Config::WriteCategory(Settings::Category category) {
+    const auto& settings = FindRelevantList(category);
+    std::for_each(settings.begin(), settings.end(),
+                  [&](const auto& setting) { WriteSettingGeneric(setting); });
+}
+
+void Config::ReadSettingGeneric(Settings::BasicSetting* const setting) {
+    if (!setting->Save()) {
+        return;
+    }
+    const QString name = QString::fromStdString(setting->GetLabel());
+    const auto default_value =
+        QVariant::fromValue<QString>(QString::fromStdString(setting->DefaultToString()));
+
+    if (setting->Switchable()) {
+        const bool use_global =
+            qt_config->value(name + QStringLiteral("/use_global"), true).value<bool>();
+        setting->SetGlobal(use_global);
+
+        if (global || !use_global) {
+            setting->LoadString(ReadSetting(name, default_value).value<QString>().toStdString());
+        }
+    } else if (global) {
+        setting->LoadString(ReadSetting(name, default_value).value<QString>().toStdString());
+    }
+}
+
+void Config::WriteSettingGeneric(Settings::BasicSetting* const setting) const {
+    if (!setting->Save()) {
+        return;
+    }
+    const QVariant value = QVariant::fromValue(QString::fromStdString(setting->ToString()));
+    const QVariant default_value =
+        QVariant::fromValue(QString::fromStdString(setting->DefaultToString()));
+    const QString label = QString::fromStdString(setting->GetLabel());
+    if (setting->Switchable()) {
+        if (!global) {
+            qt_config->setValue(label + QStringLiteral("/use_global"), setting->UsingGlobal());
+        }
+        if (global || !setting->UsingGlobal()) {
+            qt_config->setValue(label + QStringLiteral("/default"), value == default_value);
+            qt_config->setValue(label, value);
+        }
+    } else if (global) {
+        qt_config->setValue(label + QStringLiteral("/default"), value == default_value);
+        qt_config->setValue(label, value);
+    }
 }
 
 QVariant Config::ReadSetting(const QString& name) const {

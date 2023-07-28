@@ -10,6 +10,7 @@
 #include <QVariant>
 #include "citra_qt/uisettings.h"
 #include "common/settings.h"
+#include "common/settings_common.h"
 
 class QSettings;
 
@@ -128,6 +129,11 @@ private:
      */
     template <typename Type, bool ranged>
     void WriteBasicSetting(const Settings::Setting<Type, ranged>& setting);
+
+    void ReadCategory(Settings::Category category);
+    void WriteCategory(Settings::Category category);
+    void ReadSettingGeneric(Settings::BasicSetting* const setting);
+    void WriteSettingGeneric(Settings::BasicSetting* const setting) const;
 
     ConfigType type;
     std::unique_ptr<QSettings> qt_config;

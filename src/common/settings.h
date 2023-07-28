@@ -155,7 +155,7 @@ struct Values {
     SwitchableSetting<u32> physical_device{linkage, 0, "physical_device", Category::Renderer};
     Setting<bool> use_gles{linkage, false, "use_gles", Category::Renderer};
     Setting<bool> renderer_debug{linkage, false, "renderer_debug", Category::Renderer};
-    Setting<bool> dump_command_buffers{linkage, false, "dump_command_buffers", Category::Renderer};
+    Setting<bool> dump_command_buffers{linkage, false, "dump_command_buffers", Category::Debugging};
     SwitchableSetting<bool> spirv_shader_gen{linkage, true, "spirv_shader_gen", Category::Renderer};
     SwitchableSetting<bool> async_shader_compilation{linkage, false, "async_shader_compilation",
                                                      Category::Renderer};
