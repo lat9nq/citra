@@ -19,12 +19,16 @@ const char* TranslateCategory(Category category) {
         return "Audio";
     case Category::Core:
         return "Core";
+    case Category::Layout:
+        return "Layout";
     case Category::Renderer:
     case Category::RendererAdvanced:
     case Category::RendererDebug:
         return "Renderer";
     case Category::System:
         return "System";
+    case Category::Utility:
+        return "Utility";
     case Category::DataStorage:
         return "Data Storage";
     case Category::Debugging:
@@ -40,11 +44,14 @@ const char* TranslateCategory(Category category) {
     case Category::UiGeneral:
         return "UI";
     case Category::UiLayout:
-        return "UiLayout";
+        return "UILayout";
     case Category::UiGameList:
-        return "UiGameList";
+        return "GameList";
+    case Category::UiUpdater:
+        return "Updater";
     case Category::Screenshots:
-        return "Screenshots";
+        // case Category::Paths:
+        return "Paths";
     case Category::Shortcuts:
         return "Shortcuts";
     case Category::Multiplayer:
