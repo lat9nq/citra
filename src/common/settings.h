@@ -176,49 +176,48 @@ struct Values {
                                                     Category::Renderer};
 
     SwitchableSetting<LayoutOption> layout_option{linkage, LayoutOption::Default, "layout_option",
-                                                  Category::Renderer};
-    SwitchableSetting<bool> swap_screen{linkage, false, "swap_screen", Category::Renderer};
-    SwitchableSetting<bool> upright_screen{linkage, false, "upright_screen", Category::Renderer};
+                                                  Category::Layout};
+    SwitchableSetting<bool> swap_screen{linkage, false, "swap_screen", Category::Layout};
+    SwitchableSetting<bool> upright_screen{linkage, false, "upright_screen", Category::Layout};
     SwitchableSetting<float, true> large_screen_proportion{
-        linkage, 4.f, 1.f, 16.f, "large_screen_proportion", Category::Renderer};
-    Setting<bool> custom_layout{linkage, false, "custom_layout", Category::Renderer};
-    Setting<u16> custom_top_left{linkage, 0, "custom_top_left", Category::Renderer};
-    Setting<u16> custom_top_top{linkage, 0, "custom_top_top", Category::Renderer};
-    Setting<u16> custom_top_right{linkage, 400, "custom_top_right", Category::Renderer};
-    Setting<u16> custom_top_bottom{linkage, 240, "custom_top_bottom", Category::Renderer};
-    Setting<u16> custom_bottom_left{linkage, 40, "custom_bottom_left", Category::Renderer};
-    Setting<u16> custom_bottom_top{linkage, 240, "custom_bottom_top", Category::Renderer};
-    Setting<u16> custom_bottom_right{linkage, 360, "custom_bottom_right", Category::Renderer};
-    Setting<u16> custom_bottom_bottom{linkage, 480, "custom_bottom_bottom", Category::Renderer};
+        linkage, 4.f, 1.f, 16.f, "large_screen_proportion", Category::Layout};
+    Setting<bool> custom_layout{linkage, false, "custom_layout", Category::Layout};
+    Setting<u16> custom_top_left{linkage, 0, "custom_top_left", Category::Layout};
+    Setting<u16> custom_top_top{linkage, 0, "custom_top_top", Category::Layout};
+    Setting<u16> custom_top_right{linkage, 400, "custom_top_right", Category::Layout};
+    Setting<u16> custom_top_bottom{linkage, 240, "custom_top_bottom", Category::Layout};
+    Setting<u16> custom_bottom_left{linkage, 40, "custom_bottom_left", Category::Layout};
+    Setting<u16> custom_bottom_top{linkage, 240, "custom_bottom_top", Category::Layout};
+    Setting<u16> custom_bottom_right{linkage, 360, "custom_bottom_right", Category::Layout};
+    Setting<u16> custom_bottom_bottom{linkage, 480, "custom_bottom_bottom", Category::Layout};
     Setting<u16> custom_second_layer_opacity{linkage, 100, "custom_second_layer_opacity",
-                                             Category::Renderer};
+                                             Category::Layout};
 
     SwitchableSetting<float> bg_red{linkage, 0.f, "bg_red", Category::Renderer};
     SwitchableSetting<float> bg_green{linkage, 0.f, "bg_green", Category::Renderer};
     SwitchableSetting<float> bg_blue{linkage, 0.f, "bg_blue", Category::Renderer};
 
     SwitchableSetting<StereoRenderOption> render_3d{linkage, StereoRenderOption::Off, "render_3d",
-                                                    Category::Renderer};
-    SwitchableSetting<u32> factor_3d{linkage, 0, "factor_3d", Category::Renderer};
-    SwitchableSetting<MonoRenderOption> mono_render_option{
-        linkage, MonoRenderOption::LeftEye, "mono_render_option", Category::Renderer};
+                                                    Category::Layout};
+    SwitchableSetting<u32> factor_3d{linkage, 0, "factor_3d", Category::Layout};
+    SwitchableSetting<MonoRenderOption> mono_render_option{linkage, MonoRenderOption::LeftEye,
+                                                           "mono_render_option", Category::Layout};
 
     Setting<u32> cardboard_screen_size{linkage, 85, "cardboard_screen_size", Category::Renderer};
     Setting<s32> cardboard_x_shift{linkage, 0, "cardboard_x_shift", Category::Renderer};
     Setting<s32> cardboard_y_shift{linkage, 0, "cardboard_y_shift", Category::Renderer};
 
-    SwitchableSetting<bool> filter_mode{linkage, true, "filter_mode", Category::Renderer};
+    SwitchableSetting<bool> filter_mode{linkage, true, "filter_mode", Category::Layout};
     SwitchableSetting<std::string> pp_shader_name{linkage, "none (builtin)", "pp_shader_name",
-                                                  Category::Renderer};
+                                                  Category::Layout};
     SwitchableSetting<std::string> anaglyph_shader_name{linkage, "dubois (builtin)",
-                                                        "anaglyph_shader_name", Category::Renderer};
+                                                        "anaglyph_shader_name", Category::Layout};
 
-    SwitchableSetting<bool> dump_textures{linkage, false, "dump_textures", Category::Renderer};
-    SwitchableSetting<bool> custom_textures{linkage, false, "custom_textures", Category::Renderer};
-    SwitchableSetting<bool> preload_textures{linkage, false, "preload_textures",
-                                             Category::Renderer};
+    SwitchableSetting<bool> dump_textures{linkage, false, "dump_textures", Category::Utility};
+    SwitchableSetting<bool> custom_textures{linkage, false, "custom_textures", Category::Utility};
+    SwitchableSetting<bool> preload_textures{linkage, false, "preload_textures", Category::Utility};
     SwitchableSetting<bool> async_custom_loading{linkage, true, "async_custom_loading",
-                                                 Category::Renderer};
+                                                 Category::Utility};
 
     // Audio
     bool audio_muted;

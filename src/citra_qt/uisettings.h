@@ -91,9 +91,9 @@ struct Values {
     Settings::Setting<bool> hide_mouse{linkage, false, "hideInactiveMouse", Category::UiGeneral};
 
     bool updater_found;
-    Settings::Setting<bool> update_on_close{linkage, false, "update_on_close", Category::Ui};
+    Settings::Setting<bool> update_on_close{linkage, false, "update_on_close", Category::UiUpdater};
     Settings::Setting<bool> check_for_update_on_start{linkage, true, "check_for_update_on_start",
-                                                      Category::Ui};
+                                                      Category::UiUpdater};
 
     // Discord RPC
     Settings::Setting<bool> enable_discord_presence{linkage, true, "enable_discord_presence",
@@ -122,7 +122,7 @@ struct Values {
                                              Category::UiGameList};
 
     Settings::Setting<u16> screenshot_resolution_factor{linkage, 0, "screenshot_resolution_factor",
-                                                        Category::Screenshots};
+                                                        Category::Ui};
     Settings::SwitchableSetting<std::string> screenshot_path{linkage, "", "screenshotPath",
                                                              Category::Screenshots};
 
