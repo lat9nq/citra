@@ -539,6 +539,7 @@ void Config::ReadPathValues() {
     qt_config->beginGroup(QStringLiteral("Paths"));
 
     ReadCategory(Settings::Category::Screenshots);
+    ReadCategory(Settings::Category::Paths);
 
     if (global) {
         UISettings::values.roms_path = ReadSetting(QStringLiteral("romsPath")).toString();
@@ -762,16 +763,7 @@ void Config::SaveValues() {
 void Config::SaveAudioValues() {
     qt_config->beginGroup(QStringLiteral("Audio"));
 
-    WriteGlobalSetting(Settings::values.audio_emulation);
-    WriteGlobalSetting(Settings::values.enable_audio_stretching);
-    WriteGlobalSetting(Settings::values.volume);
-
-    if (global) {
-        WriteBasicSetting(Settings::values.output_type);
-        WriteBasicSetting(Settings::values.output_device);
-        WriteBasicSetting(Settings::values.input_type);
-        WriteBasicSetting(Settings::values.input_device);
-    }
+    WriteCategory(Settings::Category::Audio);
 
     qt_config->endGroup();
 }
@@ -868,10 +860,7 @@ void Config::SaveControlValues() {
 void Config::SaveUtilityValues() {
     qt_config->beginGroup(QStringLiteral("Utility"));
 
-    WriteGlobalSetting(Settings::values.dump_textures);
-    WriteGlobalSetting(Settings::values.custom_textures);
-    WriteGlobalSetting(Settings::values.preload_textures);
-    WriteGlobalSetting(Settings::values.async_custom_loading);
+    WriteCategory(Settings::Category::Utility);
 
     qt_config->endGroup();
 }
@@ -879,11 +868,7 @@ void Config::SaveUtilityValues() {
 void Config::SaveCoreValues() {
     qt_config->beginGroup(QStringLiteral("Core"));
 
-    WriteGlobalSetting(Settings::values.cpu_clock_percentage);
-
-    if (global) {
-        WriteBasicSetting(Settings::values.use_cpu_jit);
-    }
+    WriteCategory(Settings::Category::Core);
 
     qt_config->endGroup();
 }
@@ -891,8 +876,8 @@ void Config::SaveCoreValues() {
 void Config::SaveDataStorageValues() {
     qt_config->beginGroup(QStringLiteral("Data Storage"));
 
-    WriteBasicSetting(Settings::values.use_virtual_sd);
-    WriteBasicSetting(Settings::values.use_custom_storage);
+    WriteCategory(Settings::Category::DataStorage);
+
     WriteSetting(QStringLiteral("nand_directory"),
                  QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)),
                  QStringLiteral(""));
@@ -908,9 +893,8 @@ void Config::SaveDebuggingValues() {
 
     // Intentionally not using the QT default setting as this is intended to be changed in the ini
     qt_config->setValue(QStringLiteral("record_frame_times"), Settings::values.record_frame_times);
-    WriteBasicSetting(Settings::values.use_gdbstub);
-    WriteBasicSetting(Settings::values.gdbstub_port);
-    WriteBasicSetting(Settings::values.renderer_debug);
+
+    WriteCategory(Settings::Category::Debugging);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Settings::values.lle_modules) {
@@ -924,29 +908,7 @@ void Config::SaveDebuggingValues() {
 void Config::SaveLayoutValues() {
     qt_config->beginGroup(QStringLiteral("Layout"));
 
-    WriteGlobalSetting(Settings::values.render_3d);
-    WriteGlobalSetting(Settings::values.factor_3d);
-    WriteGlobalSetting(Settings::values.filter_mode);
-    WriteGlobalSetting(Settings::values.pp_shader_name);
-    WriteGlobalSetting(Settings::values.anaglyph_shader_name);
-    WriteGlobalSetting(Settings::values.layout_option);
-    WriteGlobalSetting(Settings::values.swap_screen);
-    WriteGlobalSetting(Settings::values.upright_screen);
-    WriteGlobalSetting(Settings::values.large_screen_proportion);
-
-    if (global) {
-        WriteBasicSetting(Settings::values.mono_render_option);
-        WriteBasicSetting(Settings::values.custom_layout);
-        WriteBasicSetting(Settings::values.custom_top_left);
-        WriteBasicSetting(Settings::values.custom_top_top);
-        WriteBasicSetting(Settings::values.custom_top_right);
-        WriteBasicSetting(Settings::values.custom_top_bottom);
-        WriteBasicSetting(Settings::values.custom_bottom_left);
-        WriteBasicSetting(Settings::values.custom_bottom_top);
-        WriteBasicSetting(Settings::values.custom_bottom_right);
-        WriteBasicSetting(Settings::values.custom_bottom_bottom);
-        WriteBasicSetting(Settings::values.custom_second_layer_opacity);
-    }
+    WriteCategory(Settings::Category::Layout);
 
     qt_config->endGroup();
 }
@@ -954,7 +916,7 @@ void Config::SaveLayoutValues() {
 void Config::SaveMiscellaneousValues() {
     qt_config->beginGroup(QStringLiteral("Miscellaneous"));
 
-    WriteBasicSetting(Settings::values.log_filter);
+    WriteCategory(Settings::Category::Miscellaneous);
 
     qt_config->endGroup();
 }
@@ -996,7 +958,9 @@ void Config::SaveMultiplayerValues() {
 void Config::SavePathValues() {
     qt_config->beginGroup(QStringLiteral("Paths"));
 
-    WriteGlobalSetting(UISettings::values.screenshot_path);
+    WriteCategory(Settings::Category::Screenshots);
+    WriteCategory(Settings::Category::Paths);
+
     if (global) {
         WriteSetting(QStringLiteral("romsPath"), UISettings::values.roms_path);
         WriteSetting(QStringLiteral("symbolsPath"), UISettings::values.symbols_path);
@@ -1022,23 +986,7 @@ void Config::SavePathValues() {
 void Config::SaveRendererValues() {
     qt_config->beginGroup(QStringLiteral("Renderer"));
 
-    WriteGlobalSetting(Settings::values.graphics_api);
-    WriteGlobalSetting(Settings::values.physical_device);
-    WriteGlobalSetting(Settings::values.spirv_shader_gen);
-    WriteGlobalSetting(Settings::values.async_shader_compilation);
-    WriteGlobalSetting(Settings::values.async_presentation);
-    WriteGlobalSetting(Settings::values.use_hw_shader);
-    WriteGlobalSetting(Settings::values.shaders_accurate_mul);
-    WriteGlobalSetting(Settings::values.use_disk_shader_cache);
-    WriteGlobalSetting(Settings::values.use_vsync_new);
-    WriteGlobalSetting(Settings::values.resolution_factor);
-    WriteGlobalSetting(Settings::values.frame_limit);
-
-    WriteGlobalSetting(Settings::values.bg_red);
-    WriteGlobalSetting(Settings::values.bg_green);
-    WriteGlobalSetting(Settings::values.bg_blue);
-
-    WriteGlobalSetting(Settings::values.texture_filter);
+    WriteCategory(Settings::Category::Renderer);
 
     if (global) {
         WriteSetting(QStringLiteral("use_shader_jit"), Settings::values.use_shader_jit.GetValue(),
@@ -1071,16 +1019,7 @@ void Config::SaveShortcutValues() {
 void Config::SaveSystemValues() {
     qt_config->beginGroup(QStringLiteral("System"));
 
-    WriteGlobalSetting(Settings::values.is_new_3ds);
-    WriteGlobalSetting(Settings::values.region_value);
-
-    if (global) {
-        WriteBasicSetting(Settings::values.init_clock);
-        WriteBasicSetting(Settings::values.init_time);
-        WriteBasicSetting(Settings::values.init_time_offset);
-        WriteBasicSetting(Settings::values.plugin_loader_enabled);
-        WriteBasicSetting(Settings::values.allow_plugin_loader);
-    }
+    WriteCategory(Settings::Category::System);
 
     qt_config->endGroup();
 }
@@ -1120,8 +1059,6 @@ void Config::SaveUIValues() {
     if (global) {
         WriteSetting(QStringLiteral("theme"), UISettings::values.theme,
                      QString::fromUtf8(UISettings::themes[0].second));
-        WriteBasicSetting(UISettings::values.enable_discord_presence);
-        WriteBasicSetting(UISettings::values.screenshot_resolution_factor);
 
         SaveUpdaterValues();
         SaveUILayoutValues();
@@ -1129,18 +1066,8 @@ void Config::SaveUIValues() {
         SaveShortcutValues();
         SaveMultiplayerValues();
 
-        WriteBasicSetting(UISettings::values.single_window_mode);
-        WriteBasicSetting(UISettings::values.fullscreen);
-        WriteBasicSetting(UISettings::values.display_titlebar);
-        WriteBasicSetting(UISettings::values.show_filter_bar);
-        WriteBasicSetting(UISettings::values.show_status_bar);
-        WriteBasicSetting(UISettings::values.confirm_before_closing);
-        WriteBasicSetting(UISettings::values.save_state_warning);
-        WriteBasicSetting(UISettings::values.first_start);
-        WriteBasicSetting(UISettings::values.callout_flags);
-        WriteBasicSetting(UISettings::values.show_console);
-        WriteBasicSetting(UISettings::values.pause_when_in_background);
-        WriteBasicSetting(UISettings::values.hide_mouse);
+        WriteCategory(Settings::Category::Ui);
+        WriteCategory(Settings::Category::UiGeneral);
     }
 
     qt_config->endGroup();
@@ -1149,16 +1076,7 @@ void Config::SaveUIValues() {
 void Config::SaveUIGameListValues() {
     qt_config->beginGroup(QStringLiteral("GameList"));
 
-    WriteBasicSetting(UISettings::values.game_list_icon_size);
-    WriteBasicSetting(UISettings::values.game_list_row_1);
-    WriteBasicSetting(UISettings::values.game_list_row_2);
-    WriteBasicSetting(UISettings::values.game_list_hide_no_icon);
-    WriteBasicSetting(UISettings::values.game_list_single_line_mode);
-
-    WriteBasicSetting(UISettings::values.show_compat_column);
-    WriteBasicSetting(UISettings::values.show_region_column);
-    WriteBasicSetting(UISettings::values.show_type_column);
-    WriteBasicSetting(UISettings::values.show_size_column);
+    WriteCategory(Settings::Category::UiGameList);
 
     qt_config->endGroup();
 }
@@ -1172,7 +1090,8 @@ void Config::SaveUILayoutValues() {
     WriteSetting(QStringLiteral("gameListHeaderState"), UISettings::values.gamelist_header_state);
     WriteSetting(QStringLiteral("microProfileDialogGeometry"),
                  UISettings::values.microprofile_geometry);
-    WriteBasicSetting(UISettings::values.microprofile_visible);
+
+    WriteCategory(Settings::Category::UiLayout);
 
     qt_config->endGroup();
 }
@@ -1180,8 +1099,7 @@ void Config::SaveUILayoutValues() {
 void Config::SaveUpdaterValues() {
     qt_config->beginGroup(QStringLiteral("Updater"));
 
-    WriteBasicSetting(UISettings::values.check_for_update_on_start);
-    WriteBasicSetting(UISettings::values.update_on_close);
+    WriteCategory(Settings::Category::UiUpdater);
 
     qt_config->endGroup();
 }
