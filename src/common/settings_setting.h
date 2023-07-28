@@ -182,6 +182,8 @@ public:
             }
         } catch (std::invalid_argument&) {
             this->SetValue(this->GetDefault());
+        } catch (std::out_of_range&) {
+            this->SetValue(this->GetDefault());
         }
     }
 
