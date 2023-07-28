@@ -49,15 +49,13 @@ const char* TranslateCategory(Category category) {
         return "GameList";
     case Category::UiUpdater:
         return "Updater";
-    case Category::Screenshots:
-        // case Category::Paths:
-        return "Paths";
     case Category::Shortcuts:
         return "Shortcuts";
     case Category::Multiplayer:
         return "Multiplayer";
     case Category::Services:
         return "Services";
+    case Category::Screenshots:
     case Category::Paths:
         return "Paths";
     case Category::MaxEnum:
