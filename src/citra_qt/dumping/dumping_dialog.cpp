@@ -118,7 +118,7 @@ void DumpingDialog::Populate() {
         ui->formatComboBox->addItem(tr("%1 (%2)").arg(QString::fromStdString(format.long_name),
                                                       QString::fromStdString(format.name)),
                                     static_cast<unsigned long long>(i));
-        if (format.name == Settings::values.output_format) {
+        if (format.name == Settings::values.output_format.GetValue()) {
             ui->formatComboBox->setCurrentIndex(ui->formatComboBox->count() - 1);
         }
     }
@@ -139,7 +139,7 @@ void DumpingDialog::PopulateEncoders() {
             tr("%1 (%2)").arg(QString::fromStdString(video_encoder.long_name),
                               QString::fromStdString(video_encoder.name)),
             static_cast<unsigned long long>(i));
-        if (video_encoder.name == Settings::values.video_encoder) {
+        if (video_encoder.name == Settings::values.video_encoder.GetValue()) {
             ui->videoEncoderComboBox->setCurrentIndex(ui->videoEncoderComboBox->count() - 1);
         }
     }
@@ -155,7 +155,7 @@ void DumpingDialog::PopulateEncoders() {
             tr("%1 (%2)").arg(QString::fromStdString(audio_encoder.long_name),
                               QString::fromStdString(audio_encoder.name)),
             static_cast<unsigned long long>(i));
-        if (audio_encoder.name == Settings::values.audio_encoder) {
+        if (audio_encoder.name == Settings::values.audio_encoder.GetValue()) {
             ui->audioEncoderComboBox->setCurrentIndex(ui->audioEncoderComboBox->count() - 1);
         }
     }
@@ -195,14 +195,15 @@ void DumpingDialog::OpenOptionsDialog(const std::vector<VideoDumper::OptionInfo>
 void DumpingDialog::SetConfiguration() {
     Populate();
 
-    ui->formatOptionsLineEdit->setText(QString::fromStdString(Settings::values.format_options));
+    ui->formatOptionsLineEdit->setText(
+        QString::fromStdString(Settings::values.format_options.GetValue()));
     ui->videoEncoderOptionsLineEdit->setText(
-        QString::fromStdString(Settings::values.video_encoder_options));
+        QString::fromStdString(Settings::values.video_encoder_options.GetValue()));
     ui->audioEncoderOptionsLineEdit->setText(
-        QString::fromStdString(Settings::values.audio_encoder_options));
+        QString::fromStdString(Settings::values.audio_encoder_options.GetValue()));
     last_path = UISettings::values.video_dumping_path;
-    ui->videoBitrateSpinBox->setValue(static_cast<int>(Settings::values.video_bitrate));
-    ui->audioBitrateSpinBox->setValue(static_cast<int>(Settings::values.audio_bitrate));
+    ui->videoBitrateSpinBox->setValue(static_cast<int>(Settings::values.video_bitrate.GetValue()));
+    ui->audioBitrateSpinBox->setValue(static_cast<int>(Settings::values.audio_bitrate.GetValue()));
 }
 
 void DumpingDialog::ApplyConfiguration() {

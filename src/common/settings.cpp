@@ -36,6 +36,8 @@ const char* TranslateCategory(Category category) {
         return "Debugging";
     case Category::Miscellaneous:
         return "Miscellaneous";
+    case Category::VideoDumping:
+        return "VideoDumping";
     case Category::WebService:
         return "WebService";
     case Category::Controls:

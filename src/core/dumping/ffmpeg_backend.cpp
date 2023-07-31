@@ -153,7 +153,7 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
 
     // Initialize video codec
     const AVCodec* codec =
-        FFmpeg::avcodec_find_encoder_by_name(Settings::values.video_encoder.c_str());
+        FFmpeg::avcodec_find_encoder_by_name(Settings::values.video_encoder.GetValue().c_str());
     codec_context.reset(FFmpeg::avcodec_alloc_context3(codec));
     if (!codec || !codec_context) {
         LOG_ERROR(Render, "Could not find video encoder or allocate video codec context");
@@ -162,7 +162,7 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
 
     // Configure video codec context
     codec_context->codec_type = AVMEDIA_TYPE_VIDEO;
-    codec_context->bit_rate = Settings::values.video_bitrate;
+    codec_context->bit_rate = Settings::values.video_bitrate.GetValue();
     codec_context->width = layout.width;
     codec_context->height = layout.height;
     // Use 60fps here, since the video is already filtered (resampled)
@@ -171,7 +171,7 @@ bool FFmpegVideoStream::Init(FFmpegMuxer& muxer, const Layout::FramebufferLayout
     codec_context->gop_size = 12;
 
     // Get pixel format for codec
-    auto options = ToAVDictionary(Settings::values.video_encoder_options);
+    auto options = ToAVDictionary(Settings::values.video_encoder_options.GetValue());
     auto pixel_format_opt = FFmpeg::av_dict_get(options, "pixel_format", nullptr, 0);
     if (pixel_format_opt) {
         sw_pixel_format = FFmpeg::av_get_pix_fmt(pixel_format_opt->value);
@@ -458,7 +458,7 @@ bool FFmpegAudioStream::Init(FFmpegMuxer& muxer) {
 
     // Initialize audio codec
     const AVCodec* codec =
-        FFmpeg::avcodec_find_encoder_by_name(Settings::values.audio_encoder.c_str());
+        FFmpeg::avcodec_find_encoder_by_name(Settings::values.audio_encoder.GetValue().c_str());
     codec_context.reset(FFmpeg::avcodec_alloc_context3(codec));
     if (!codec || !codec_context) {
         LOG_ERROR(Render, "Could not find audio encoder or allocate audio codec context");
@@ -467,7 +467,7 @@ bool FFmpegAudioStream::Init(FFmpegMuxer& muxer) {
 
     // Configure audio codec context
     codec_context->codec_type = AVMEDIA_TYPE_AUDIO;
-    codec_context->bit_rate = Settings::values.audio_bitrate;
+    codec_context->bit_rate = Settings::values.audio_bitrate.GetValue();
     if (codec->sample_fmts) {
         codec_context->sample_fmt = codec->sample_fmts[0];
     } else {
@@ -500,7 +500,7 @@ bool FFmpegAudioStream::Init(FFmpegMuxer& muxer) {
         codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
     }
 
-    AVDictionary* options = ToAVDictionary(Settings::values.audio_encoder_options);
+    AVDictionary* options = ToAVDictionary(Settings::values.audio_encoder_options.GetValue());
     if (FFmpeg::avcodec_open2(codec_context.get(), codec, &options) < 0) {
         LOG_ERROR(Render, "Could not open audio codec");
         return false;
@@ -665,9 +665,9 @@ bool FFmpegMuxer::Init(const std::string& path, const Layout::FramebufferLayout&
 
     // Get output format
     const auto format = Settings::values.output_format;
-    auto* output_format = FFmpeg::av_guess_format(format.c_str(), path.c_str(), nullptr);
+    auto* output_format = FFmpeg::av_guess_format(format.GetValue().c_str(), path.c_str(), nullptr);
     if (!output_format) {
-        LOG_ERROR(Render, "Could not get format {}", format);
+        LOG_ERROR(Render, "Could not get format {}", format.GetValue());
         return false;
     }
 
@@ -685,7 +685,7 @@ bool FFmpegMuxer::Init(const std::string& path, const Layout::FramebufferLayout&
     if (!audio_stream.Init(*this))
         return false;
 
-    AVDictionary* options = ToAVDictionary(Settings::values.format_options);
+    AVDictionary* options = ToAVDictionary(Settings::values.format_options.GetValue());
     // Open video file
     if (FFmpeg::avio_open(&format_context->pb, path.c_str(), AVIO_FLAG_WRITE) < 0 ||
         FFmpeg::avformat_write_header(format_context.get(), &options)) {

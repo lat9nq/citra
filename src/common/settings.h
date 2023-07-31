@@ -116,6 +116,12 @@ static constexpr s32 REGION_VALUE_AUTO_SELECT = -1;
 
 static constexpr u32 CAMERA_COUNT = 3;
 
+// Options for variable bit rate live streaming taken from here:
+// https://developers.google.com/media/vp9/live-encoding
+const std::string DEFAULT_VIDEO_ENCODER_OPTIONS{
+    "quality:realtime,speed:6,tile-columns:4,frame-parallel:1,threads:8,row-mt:1"};
+const std::string DEFAULT_AUDIO_ENCODER_OPTIONS{""};
+
 struct Values {
     Linkage linkage{};
 
@@ -247,16 +253,20 @@ struct Values {
     Setting<std::string> log_filter{linkage, "*:Info", "log_filter", Category::Miscellaneous};
 
     // Video Dumping
-    std::string output_format;
-    std::string format_options;
+    Setting<std::string> output_format{linkage, "webm", "output_format", Category::VideoDumping};
+    Setting<std::string> format_options{linkage, "", "format_options", Category::VideoDumping};
 
-    std::string video_encoder;
-    std::string video_encoder_options;
-    u64 video_bitrate;
+    Setting<std::string> video_encoder{linkage, "libvpx-vp9", "video_encoder",
+                                       Category::VideoDumping};
+    Setting<std::string> video_encoder_options{linkage, DEFAULT_VIDEO_ENCODER_OPTIONS,
+                                               "video_encoder_options", Category::VideoDumping};
+    Setting<u64> video_bitrate{linkage, 2500000, "video_bitrate", Category::VideoDumping};
 
-    std::string audio_encoder;
-    std::string audio_encoder_options;
-    u64 audio_bitrate;
+    Setting<std::string> audio_encoder{linkage, "libvorbis", "audio_encoder",
+                                       Category::VideoDumping};
+    Setting<std::string> audio_encoder_options{linkage, DEFAULT_AUDIO_ENCODER_OPTIONS,
+                                               "audio_encoder_options", Category::VideoDumping};
+    Setting<u64> audio_bitrate{linkage, 64000, "audio_bitrate", Category::VideoDumping};
 };
 
 extern Values values;

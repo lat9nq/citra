@@ -24,6 +24,7 @@ enum class Category : u32 {
     Debugging,
     DebuggingGraphics,
     Miscellaneous,
+    VideoDumping,
     WebService,
     Controls,
     Ui,
