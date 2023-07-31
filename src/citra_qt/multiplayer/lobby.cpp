@@ -55,7 +55,7 @@ Lobby::Lobby(Core::System& system_, QWidget* parent, QStandardItemModel* list,
     ui->room_list->setContextMenuPolicy(Qt::CustomContextMenu);
 
     ui->nickname->setValidator(validation.GetNickname());
-    ui->nickname->setText(UISettings::values.nickname);
+    ui->nickname->setText(QString::fromStdString(UISettings::values.nickname.GetValue()));
     if (ui->nickname->text().isEmpty() && !NetSettings::values.citra_username.empty()) {
         // Use Citra Web Service user name as nickname by default
         ui->nickname->setText(QString::fromStdString(NetSettings::values.citra_username));
@@ -177,9 +177,11 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     // TODO(jroweboy): disable widgets and display a connecting while we wait
 
     // Save settings
-    UISettings::values.nickname = ui->nickname->text();
-    UISettings::values.ip = proxy->data(connection_index, LobbyItemHost::HostIPRole).toString();
-    UISettings::values.port = proxy->data(connection_index, LobbyItemHost::HostPortRole).toString();
+    UISettings::values.nickname = ui->nickname->text().toStdString();
+    UISettings::values.ip =
+        proxy->data(connection_index, LobbyItemHost::HostIPRole).toString().toStdString();
+    UISettings::values.port =
+        proxy->data(connection_index, LobbyItemHost::HostPortRole).toString().toStdString();
 }
 
 void Lobby::ResetModel() {

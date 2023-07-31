@@ -145,16 +145,18 @@ struct Values {
     Settings::Setting<u32> callout_flags{linkage, 0, "calloutFlags", Category::Ui};
 
     // multiplayer settings
-    QString nickname;
-    QString ip;
-    QString port;
-    QString room_nickname;
-    QString room_name;
-    quint32 max_player;
-    QString room_port;
-    uint host_type;
-    qulonglong game_id;
-    QString room_description;
+    Settings::Setting<std::string> nickname{linkage, "", "nickname", Category::Multiplayer};
+    Settings::Setting<std::string> ip{linkage, "", "ip", Category::Multiplayer};
+    Settings::Setting<std::string> port{linkage, "", "port", Category::Multiplayer};
+    Settings::Setting<std::string> room_nickname{linkage, "", "room_nickname",
+                                                 Category::Multiplayer};
+    Settings::Setting<std::string> room_name{linkage, "", "room_name", Category::Multiplayer};
+    Settings::Setting<u32> max_player{linkage, 8, "max_player", Category::Multiplayer};
+    Settings::Setting<std::string> room_port{linkage, "", "room_port", Category::Multiplayer};
+    Settings::Setting<u32> host_type{linkage, 0, "host_type", Category::Multiplayer};
+    Settings::Setting<u64> game_id{linkage, 0, "game_id", Category::Multiplayer};
+    Settings::Setting<std::string> room_description{linkage, "", "room_description",
+                                                    Category::Multiplayer};
     std::pair<std::vector<std::string>, std::vector<std::string>> ban_list;
 
     // logging

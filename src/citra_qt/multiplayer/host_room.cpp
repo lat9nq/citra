@@ -51,23 +51,25 @@ HostRoomWindow::HostRoomWindow(Core::System& system_, QWidget* parent, QStandard
     connect(ui->host, &QPushButton::clicked, this, &HostRoomWindow::Host);
 
     // Restore the settings:
-    ui->username->setText(UISettings::values.room_nickname);
+    ui->username->setText(QString::fromStdString(UISettings::values.room_nickname.GetValue()));
     if (ui->username->text().isEmpty() && !NetSettings::values.citra_username.empty()) {
         // Use Citra Web Service user name as nickname by default
         ui->username->setText(QString::fromStdString(NetSettings::values.citra_username));
     }
-    ui->room_name->setText(UISettings::values.room_name);
-    ui->port->setText(UISettings::values.room_port);
-    ui->max_player->setValue(UISettings::values.max_player);
-    int index = UISettings::values.host_type;
+    ui->room_name->setText(QString::fromStdString(UISettings::values.room_name.GetValue()));
+    ui->port->setText(QString::fromStdString(UISettings::values.room_port.GetValue()));
+    ui->max_player->setValue(UISettings::values.max_player.GetValue());
+    int index = UISettings::values.host_type.GetValue();
     if (index < ui->host_type->count()) {
         ui->host_type->setCurrentIndex(index);
     }
-    index = ui->game_list->findData(UISettings::values.game_id, GameListItemPath::ProgramIdRole);
+    index = ui->game_list->findData(QVariant::fromValue(UISettings::values.game_id.GetValue()),
+                                    GameListItemPath::ProgramIdRole);
     if (index != -1) {
         ui->game_list->setCurrentIndex(index);
     }
-    ui->room_description->setText(UISettings::values.room_description);
+    ui->room_description->setText(
+        QString::fromStdString(UISettings::values.room_description.GetValue()));
 }
 
 HostRoomWindow::~HostRoomWindow() = default;
@@ -199,17 +201,18 @@ void HostRoomWindow::Host() {
                      "127.0.0.1", port, 0, Network::NoPreferredMac, password, token);
 
         // Store settings
-        UISettings::values.room_nickname = ui->username->text();
-        UISettings::values.room_name = ui->room_name->text();
+        UISettings::values.room_nickname = ui->username->text().toStdString();
+        UISettings::values.room_name = ui->room_name->text().toStdString();
         UISettings::values.game_id =
             ui->game_list->currentData(GameListItemPath::ProgramIdRole).toLongLong();
         UISettings::values.max_player = ui->max_player->value();
 
         UISettings::values.host_type = ui->host_type->currentIndex();
-        UISettings::values.room_port = (ui->port->isModified() && !ui->port->text().isEmpty())
-                                           ? ui->port->text()
-                                           : QString::number(Network::DefaultRoomPort);
-        UISettings::values.room_description = ui->room_description->toPlainText();
+        UISettings::values.room_port = ((ui->port->isModified() && !ui->port->text().isEmpty())
+                                            ? ui->port->text()
+                                            : QString::number(Network::DefaultRoomPort))
+                                           .toStdString();
+        UISettings::values.room_description = ui->room_description->toPlainText().toStdString();
         ui->host->setEnabled(true);
         close();
     }
