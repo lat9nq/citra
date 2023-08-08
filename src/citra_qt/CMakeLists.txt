@@ -87,6 +87,10 @@ add_executable(citra-qt
     configuration/configure_cheats.cpp
     configuration/configure_cheats.h
     configuration/configure_cheats.ui
+    configuration/shared_translation.cpp
+    configuration/shared_translation.h
+    configuration/shared_widget.cpp
+    configuration/shared_widget.h
     debugger/console.h
     debugger/console.cpp
     debugger/graphics/graphics.cpp
