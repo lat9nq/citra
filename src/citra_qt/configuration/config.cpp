@@ -574,6 +574,12 @@ void Config::ReadRendererValues() {
     qt_config->beginGroup(QStringLiteral("Renderer"));
 
     ReadCategory(Settings::Category::Renderer);
+    ReadCategory(Settings::Category::RendererDebug);
+    ReadCategory(Settings::Category::RendererStereo);
+    ReadCategory(Settings::Category::RendererApi);
+    ReadCategory(Settings::Category::RendererEnhancements);
+    ReadCategory(Settings::Category::RendererOther);
+    ReadCategory(Settings::Category::RendererAdvanced);
 
     qt_config->endGroup();
 }
@@ -926,6 +932,12 @@ void Config::SaveRendererValues() {
     qt_config->beginGroup(QStringLiteral("Renderer"));
 
     WriteCategory(Settings::Category::Renderer);
+    WriteCategory(Settings::Category::RendererDebug);
+    WriteCategory(Settings::Category::RendererStereo);
+    WriteCategory(Settings::Category::RendererApi);
+    WriteCategory(Settings::Category::RendererEnhancements);
+    WriteCategory(Settings::Category::RendererOther);
+    WriteCategory(Settings::Category::RendererAdvanced);
 
     if (global) {
         WriteSetting(QStringLiteral("use_shader_jit"), Settings::values.use_shader_jit.GetValue(),
