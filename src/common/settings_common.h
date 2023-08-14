@@ -8,41 +8,9 @@
 #include <string>
 #include <typeindex>
 #include "common/common_types.h"
+#include "common/settings_enums.h"
 
 namespace Settings {
-
-enum class Category : u32 {
-    Audio,
-    Core,
-    Layout,
-    Renderer,
-    RendererAdvanced,
-    RendererEnhancements,
-    RendererApi,
-    RendererStereo,
-    RendererOther,
-    RendererDebug,
-    System,
-    Utility,
-    DataStorage,
-    Debugging,
-    DebuggingGraphics,
-    Miscellaneous,
-    VideoDumping,
-    WebService,
-    Controls,
-    Ui,
-    UiGeneral,
-    UiLayout,
-    UiGameList,
-    UiUpdater,
-    Screenshots,
-    Shortcuts,
-    Multiplayer,
-    Services,
-    Paths,
-    MaxEnum,
-};
 
 constexpr u8 SpecializationTypeMask = 0xf;
 constexpr u8 SpecializationAttributeMask = 0xf0;

@@ -157,7 +157,10 @@ struct Values {
         GraphicsAPI::Software,
         static_cast<GraphicsAPI>(static_cast<u32>(GraphicsAPI::ApiCount) - 1),
         "graphics_api",
-        Category::Renderer};
+        Category::RendererApi,
+        Specialization::Default,
+        true,
+        true};
     SwitchableSetting<u32> physical_device{linkage, 0, "physical_device", Category::Renderer};
     Setting<bool> use_gles{linkage, false, "use_gles", Category::RendererDebug};
     Setting<bool> renderer_debug{linkage, false, "renderer_debug", Category::RendererDebug};
@@ -167,19 +170,27 @@ struct Values {
                                                      Category::Renderer};
     SwitchableSetting<bool> async_presentation{linkage, true, "async_presentation",
                                                Category::Renderer};
-    SwitchableSetting<bool> use_disk_shader_cache{linkage, true, "use_disk_shader_cache",
-                                                  Category::RendererAdvanced};
+    SwitchableSetting<bool> use_disk_shader_cache{
+        linkage, true, "use_disk_shader_cache", Category::RendererAdvanced, Specialization::Default,
+        true,    true};
     SwitchableSetting<bool> use_vsync_new{linkage, true, "use_vsync_new",
                                           Category::RendererAdvanced};
+    SwitchableSetting<bool> use_hw_shader{
+        linkage, true, "use_hw_shader", Category::Renderer, Specialization::Default, true, true};
     SwitchableSetting<bool> shaders_accurate_mul{
         linkage, true, "shaders_accurate_mul", Category::Renderer, Specialization::Default,
         true,    true};
-    SwitchableSetting<bool> use_hw_shader{
-        linkage, true, "use_hw_shader",      Category::Renderer, Specialization::Paired,
-        true,    true, &shaders_accurate_mul};
-    Setting<bool> use_shader_jit{linkage, true, "use_shader_jit", Category::Renderer};
-    SwitchableSetting<u32, true> resolution_factor{
-        linkage, 1, 0, 10, "resolution_factor", Category::RendererEnhancements};
+    Setting<bool> use_shader_jit{
+        linkage, true, "use_shader_jit", Category::Renderer, Specialization::Default, true, true};
+    SwitchableSetting<u32, true> resolution_factor{linkage,
+                                                   1,
+                                                   0,
+                                                   10,
+                                                   "resolution_factor",
+                                                   Category::RendererEnhancements,
+                                                   Specialization::Default,
+                                                   true,
+                                                   true};
     SwitchableSetting<u16, true> frame_limit{linkage, 100,           0,
                                              1000,    "frame_limit", Category::RendererOther};
     SwitchableSetting<TextureFilter> texture_filter{linkage, TextureFilter::None, "texture_filter",
@@ -213,9 +224,10 @@ struct Values {
     SwitchableSetting<MonoRenderOption> mono_render_option{
         linkage, MonoRenderOption::LeftEye, "mono_render_option", Category::RendererStereo};
 
-    Setting<u32> cardboard_screen_size{linkage, 85, "cardboard_screen_size", Category::Renderer};
-    Setting<s32> cardboard_x_shift{linkage, 0, "cardboard_x_shift", Category::Renderer};
-    Setting<s32> cardboard_y_shift{linkage, 0, "cardboard_y_shift", Category::Renderer};
+    Setting<u32> cardboard_screen_size{linkage, 85, "cardboard_screen_size",
+                                       Category::RendererCardboard};
+    Setting<s32> cardboard_x_shift{linkage, 0, "cardboard_x_shift", Category::RendererCardboard};
+    Setting<s32> cardboard_y_shift{linkage, 0, "cardboard_y_shift", Category::RendererCardboard};
 
     SwitchableSetting<bool> filter_mode{linkage, true, "filter_mode",
                                         Category::RendererEnhancements};
