@@ -4,25 +4,35 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <span>
+#include <vector>
 #include <QString>
 #include <QWidget>
+
+namespace Core {
+class System;
+}
 
 namespace Ui {
 class ConfigureGraphics;
 }
 
 namespace ConfigurationShared {
-enum class CheckState;
-}
+class Builder;
+} // namespace ConfigurationShared
+
+class QComboBox;
+class QCheckBox;
 
 class ConfigureGraphics : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureGraphics(std::span<const QString> physical_devices, bool is_powered_on,
-                               QWidget* parent = nullptr);
+    explicit ConfigureGraphics(const ConfigurationShared::Builder& builder,
+                               std::span<const QString> physical_devices,
+                               const Core::System& system, QWidget* parent = nullptr);
     ~ConfigureGraphics() override;
 
     void ApplyConfiguration();
@@ -32,16 +42,19 @@ public:
     void UpdateBackgroundColorButton(const QColor& color);
 
 private:
-    void SetupPerGameUI();
+    void Setup();
     void SetPhysicalDeviceComboVisibility(int index);
 
-    ConfigurationShared::CheckState use_hw_shader;
-    ConfigurationShared::CheckState shaders_accurate_mul;
-    ConfigurationShared::CheckState use_disk_shader_cache;
-    ConfigurationShared::CheckState use_vsync_new;
-    ConfigurationShared::CheckState async_shader_compilation;
-    ConfigurationShared::CheckState async_presentation;
-    ConfigurationShared::CheckState spirv_shader_gen;
     std::unique_ptr<Ui::ConfigureGraphics> ui;
     QColor bg_color;
+
+    std::vector<std::function<void(bool)>> apply_funcs;
+    const Core::System& system;
+    const ConfigurationShared::Builder& builder;
+
+    QComboBox* graphics_api_combo;
+    QComboBox* physical_device_combo;
+    QCheckBox* toggle_hw_shader;
+    QWidget* toggle_shaders_accurate_mul;
+    QWidget* toggle_disk_shader_cache;
 };

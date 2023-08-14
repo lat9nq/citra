@@ -2,117 +2,86 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <QColorDialog>
-#include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_graphics.h"
+
+#include <vector>
+#include <QColorDialog>
+#include <QPushButton>
+#include <QWidget>
+#include "citra_qt/configuration/configuration_shared.h"
+#include "citra_qt/configuration/shared_widget.h"
+#include "common/common_types.h"
 #include "common/settings.h"
+#include "common/settings_common.h"
+#include "common/settings_enums.h"
+#include "core/core.h"
 #include "ui_configure_graphics.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 
-ConfigureGraphics::ConfigureGraphics(std::span<const QString> physical_devices, bool is_powered_on,
-                                     QWidget* parent)
-    : QWidget(parent), ui(std::make_unique<Ui::ConfigureGraphics>()) {
+ConfigureGraphics::ConfigureGraphics(const ConfigurationShared::Builder& builder_,
+                                     std::span<const QString> physical_devices,
+                                     const Core::System& system_, QWidget* parent)
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureGraphics>()), system{system_},
+      builder{builder_} {
     ui->setupUi(this);
 
-    SetupPerGameUI();
+    Setup();
 
     for (const QString& name : physical_devices) {
-        ui->physical_device_combo->addItem(name);
+        physical_device_combo->addItem(name);
     }
-
-    ui->toggle_vsync_new->setEnabled(!is_powered_on);
-    ui->graphics_api_combo->setEnabled(!is_powered_on);
-    ui->physical_device_combo->setEnabled(!is_powered_on);
-    ui->toggle_async_shaders->setEnabled(!is_powered_on);
-    ui->toggle_async_present->setEnabled(!is_powered_on);
-    // Set the index to -1 to ensure the below lambda is called with setCurrentIndex
-    ui->graphics_api_combo->setCurrentIndex(-1);
 
     if (physical_devices.empty()) {
-        const u32 index = static_cast<u32>(Settings::GraphicsAPI::Vulkan);
-        ui->graphics_api_combo->removeItem(index);
-        ui->physical_device_combo->setVisible(false);
-        ui->spirv_shader_gen->setVisible(false);
+        const auto& translations = builder.ComboboxTranslations();
+        const auto& api_translations =
+            translations.at(Settings::EnumMetadata<Settings::GraphicsAPI>::Index());
+        const u32 index = [&]() {
+            for (int i = 0; i < api_translations.size(); i++) {
+                if (api_translations.at(i).first ==
+                    static_cast<u32>(Settings::GraphicsAPI::Vulkan)) {
+                    return i;
+                }
+            }
+            return -1;
+        }();
+        graphics_api_combo->removeItem(index);
+        ui->deviceWidget->setVisible(false);
     }
 
-    connect(ui->graphics_api_combo, qOverload<int>(&QComboBox::currentIndexChanged), this,
+    connect(graphics_api_combo, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int index) {
-                const auto graphics_api =
-                    ConfigurationShared::GetComboboxSetting(index, &Settings::values.graphics_api);
+                const auto& pair = builder.ComboboxTranslations()
+                                       .at(Settings::EnumMetadata<Settings::GraphicsAPI>::Index())
+                                       .at(index);
+                const auto graphics_api = static_cast<Settings::GraphicsAPI>(pair.first);
                 const bool is_software = graphics_api == Settings::GraphicsAPI::Software;
 
-                ui->hw_renderer_group->setEnabled(!is_software);
-                ui->toggle_disk_shader_cache->setEnabled(!is_software &&
-                                                         ui->toggle_hw_shader->isChecked());
+                toggle_hw_shader->setEnabled(!is_software);
+                toggle_shaders_accurate_mul->setEnabled(!is_software);
+                toggle_disk_shader_cache->setEnabled(!is_software && toggle_hw_shader->isChecked());
             });
 
-    connect(ui->toggle_hw_shader, &QCheckBox::toggled, this, [this] {
-        const bool enabled = ui->toggle_hw_shader->isEnabled();
-        const bool checked = ui->toggle_hw_shader->isChecked();
-        ui->hw_shader_group->setEnabled(checked && enabled);
-        ui->toggle_disk_shader_cache->setEnabled(checked && enabled);
+    connect(toggle_hw_shader, &QCheckBox::toggled, this, [this] {
+        const bool checked = toggle_hw_shader->isChecked();
+        toggle_shaders_accurate_mul->setEnabled(checked);
+        toggle_disk_shader_cache->setEnabled(checked);
     });
 
-    connect(ui->graphics_api_combo, qOverload<int>(&QComboBox::currentIndexChanged), this,
+    connect(graphics_api_combo, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureGraphics::SetPhysicalDeviceComboVisibility);
+    SetPhysicalDeviceComboVisibility(graphics_api_combo->currentIndex());
 
     SetConfiguration();
 }
 
 ConfigureGraphics::~ConfigureGraphics() = default;
 
-void ConfigureGraphics::SetConfiguration() {
-    if (!Settings::IsConfiguringGlobal()) {
-        ConfigurationShared::SetHighlight(ui->graphics_api_group,
-                                          !Settings::values.graphics_api.UsingGlobal());
-        ConfigurationShared::SetPerGameSetting(ui->graphics_api_combo,
-                                               &Settings::values.graphics_api);
-        ConfigurationShared::SetHighlight(ui->physical_device_group,
-                                          !Settings::values.physical_device.UsingGlobal());
-        ConfigurationShared::SetPerGameSetting(ui->physical_device_combo,
-                                               &Settings::values.physical_device);
-    } else {
-        ui->graphics_api_combo->setCurrentIndex(
-            static_cast<int>(Settings::values.graphics_api.GetValue()));
-        ui->physical_device_combo->setCurrentIndex(
-            static_cast<int>(Settings::values.physical_device.GetValue()));
-    }
-
-    ui->toggle_hw_shader->setChecked(Settings::values.use_hw_shader.GetValue());
-    ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul.GetValue());
-    ui->toggle_disk_shader_cache->setChecked(Settings::values.use_disk_shader_cache.GetValue());
-    ui->toggle_vsync_new->setChecked(Settings::values.use_vsync_new.GetValue());
-    ui->spirv_shader_gen->setChecked(Settings::values.spirv_shader_gen.GetValue());
-    ui->toggle_async_shaders->setChecked(Settings::values.async_shader_compilation.GetValue());
-    ui->toggle_async_present->setChecked(Settings::values.async_presentation.GetValue());
-
-    if (Settings::IsConfiguringGlobal()) {
-        ui->toggle_shader_jit->setChecked(Settings::values.use_shader_jit.GetValue());
-    }
-}
+void ConfigureGraphics::SetConfiguration() {}
 
 void ConfigureGraphics::ApplyConfiguration() {
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.graphics_api,
-                                             ui->graphics_api_combo);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.physical_device,
-                                             ui->physical_device_combo);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.async_shader_compilation,
-                                             ui->toggle_async_shaders, async_shader_compilation);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.async_presentation,
-                                             ui->toggle_async_present, async_presentation);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.spirv_shader_gen,
-                                             ui->spirv_shader_gen, spirv_shader_gen);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_hw_shader, ui->toggle_hw_shader,
-                                             use_hw_shader);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.shaders_accurate_mul,
-                                             ui->toggle_accurate_mul, shaders_accurate_mul);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_disk_shader_cache,
-                                             ui->toggle_disk_shader_cache, use_disk_shader_cache);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_vsync_new, ui->toggle_vsync_new,
-                                             use_vsync_new);
-
-    if (Settings::IsConfiguringGlobal()) {
-        Settings::values.use_shader_jit = ui->toggle_shader_jit->isChecked();
+    const bool powered_on = system.IsPoweredOn();
+    for (const auto& func : apply_funcs) {
+        func(powered_on);
     }
 }
 
@@ -120,50 +89,72 @@ void ConfigureGraphics::RetranslateUI() {
     ui->retranslateUi(this);
 }
 
-void ConfigureGraphics::SetupPerGameUI() {
-    // Block the global settings if a game is currently running that overrides them
-    if (Settings::IsConfiguringGlobal()) {
-        ui->graphics_api_group->setEnabled(Settings::values.graphics_api.UsingGlobal());
-        ui->toggle_hw_shader->setEnabled(Settings::values.use_hw_shader.UsingGlobal());
-        ui->toggle_accurate_mul->setEnabled(Settings::values.shaders_accurate_mul.UsingGlobal());
-        ui->toggle_disk_shader_cache->setEnabled(
-            Settings::values.use_disk_shader_cache.UsingGlobal());
-        ui->toggle_vsync_new->setEnabled(ui->toggle_vsync_new->isEnabled() &&
-                                         Settings::values.use_vsync_new.UsingGlobal());
-        ui->toggle_async_shaders->setEnabled(
-            Settings::values.async_shader_compilation.UsingGlobal());
-        ui->toggle_async_present->setEnabled(Settings::values.async_presentation.UsingGlobal());
-        ui->graphics_api_combo->setEnabled(Settings::values.graphics_api.UsingGlobal());
-        ui->physical_device_combo->setEnabled(Settings::values.physical_device.UsingGlobal());
-        return;
+void ConfigureGraphics::Setup() {
+    std::vector<Settings::BasicSetting*> settings;
+    constexpr u32 categories[5] = {static_cast<u32>(Settings::Category::Renderer),
+                                   static_cast<u32>(Settings::Category::RendererAdvanced),
+                                   static_cast<u32>(Settings::Category::RendererApi),
+                                   static_cast<u32>(Settings::Category::RendererDevice), 0};
+    ConfigurationShared::GroupSettings(settings, categories);
+
+    for (auto* setting : settings) {
+        ConfigurationShared::Widget* widget = builder.BuildWidget(setting, apply_funcs);
+
+        if (widget == nullptr) {
+            continue;
+        } else if (!widget->Valid()) {
+            widget->deleteLater();
+            continue;
+        }
+
+        switch (setting->GetCategory()) {
+        case Settings::Category::Renderer:
+            ui->rendererBox->layout()->addWidget(widget);
+            break;
+        case Settings::Category::RendererAdvanced:
+            ui->advancedBox->layout()->addWidget(widget);
+            break;
+        case Settings::Category::RendererApi:
+            ui->apiLayout->addWidget(widget);
+            break;
+        case Settings::Category::RendererDevice:
+            ui->deviceWidget->layout()->addWidget(widget);
+            break;
+        default:
+            widget->deleteLater();
+            continue;
+        }
+
+        if (setting->Id() == Settings::values.graphics_api.Id()) {
+            graphics_api_combo = widget->combobox;
+        } else if (setting->Id() == Settings::values.use_hw_shader.Id()) {
+            toggle_hw_shader = widget->checkbox;
+        } else if (setting->Id() == Settings::values.shaders_accurate_mul.Id()) {
+            toggle_shaders_accurate_mul = widget;
+        } else if (setting->Id() == Settings::values.use_disk_shader_cache.Id()) {
+            toggle_disk_shader_cache = widget;
+        } else if (setting->Id() == Settings::values.physical_device.Id()) {
+            physical_device_combo = widget->combobox;
+            if (!Settings::IsConfiguringGlobal()) {
+                auto restore_global_button = ConfigurationShared::Widget::CreateRestoreGlobalButton(
+                    Settings::values.physical_device.UsingGlobal(), widget);
+                connect(physical_device_combo, QOverload<int>::of(&QComboBox::activated),
+                        [restore_global_button] {
+                            restore_global_button->setVisible(true);
+                            restore_global_button->setEnabled(true);
+                        });
+                connect(restore_global_button, &QAbstractButton::clicked,
+                        [this, restore_global_button]() {
+                            const auto default_index =
+                                Settings::values.physical_device.GetValue(true);
+                            physical_device_combo->setCurrentIndex(default_index);
+                            restore_global_button->setVisible(false);
+                            restore_global_button->setEnabled(false);
+                        });
+                widget->layout()->addWidget(restore_global_button);
+            }
+        }
     }
-
-    ui->toggle_shader_jit->setVisible(false);
-
-    ConfigurationShared::SetColoredComboBox(
-        ui->graphics_api_combo, ui->graphics_api_group,
-        static_cast<u32>(Settings::values.graphics_api.GetValue(true)));
-
-    ConfigurationShared::SetColoredComboBox(
-        ui->physical_device_combo, ui->physical_device_group,
-        static_cast<u32>(Settings::values.physical_device.GetValue(true)));
-
-    ConfigurationShared::SetColoredTristate(ui->toggle_hw_shader, Settings::values.use_hw_shader,
-                                            use_hw_shader);
-    ConfigurationShared::SetColoredTristate(
-        ui->toggle_accurate_mul, Settings::values.shaders_accurate_mul, shaders_accurate_mul);
-    ConfigurationShared::SetColoredTristate(ui->toggle_disk_shader_cache,
-                                            Settings::values.use_disk_shader_cache,
-                                            use_disk_shader_cache);
-    ConfigurationShared::SetColoredTristate(ui->toggle_vsync_new, Settings::values.use_vsync_new,
-                                            use_vsync_new);
-    ConfigurationShared::SetColoredTristate(ui->toggle_async_shaders,
-                                            Settings::values.async_shader_compilation,
-                                            async_shader_compilation);
-    ConfigurationShared::SetColoredTristate(
-        ui->toggle_async_present, Settings::values.async_presentation, async_presentation);
-    ConfigurationShared::SetColoredTristate(ui->spirv_shader_gen, Settings::values.spirv_shader_gen,
-                                            spirv_shader_gen);
 }
 
 void ConfigureGraphics::SetPhysicalDeviceComboVisibility(int index) {
@@ -172,19 +163,11 @@ void ConfigureGraphics::SetPhysicalDeviceComboVisibility(int index) {
     // When configuring per-game the physical device combo should be
     // shown either when the global api is used and that is Vulkan or
     // Vulkan is set as the per-game api.
-    if (!Settings::IsConfiguringGlobal()) {
-        const auto global_graphics_api = Settings::values.graphics_api.GetValue(true);
-        const bool using_global = index == 0;
-        if (!using_global) {
-            index -= ConfigurationShared::USE_GLOBAL_OFFSET;
-        }
-        const auto graphics_api = static_cast<Settings::GraphicsAPI>(index);
-        is_visible = (using_global && global_graphics_api == Settings::GraphicsAPI::Vulkan) ||
-                     graphics_api == Settings::GraphicsAPI::Vulkan;
-    } else {
-        const auto graphics_api = static_cast<Settings::GraphicsAPI>(index);
-        is_visible = graphics_api == Settings::GraphicsAPI::Vulkan;
-    }
-    ui->physical_device_group->setVisible(is_visible);
-    ui->spirv_shader_gen->setVisible(is_visible);
+    const auto graphics_api = static_cast<Settings::GraphicsAPI>(
+        builder.ComboboxTranslations()
+            .at(Settings::EnumMetadata<Settings::GraphicsAPI>::Index())
+            .at(index)
+            .first);
+    is_visible = graphics_api == Settings::GraphicsAPI::Vulkan;
+    ui->deviceWidget->setVisible(is_visible);
 }

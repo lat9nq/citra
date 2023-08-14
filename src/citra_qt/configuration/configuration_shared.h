@@ -8,6 +8,7 @@
 #include <QComboBox>
 #include "common/assert.h"
 #include "common/settings.h"
+#include "common/settings_common.h"
 
 namespace ConfigurationShared {
 
@@ -111,5 +112,7 @@ void SetColoredComboBox(QComboBox* combobox, QWidget* target, int global);
 
 /// Adds the "Use Global Configuration" selection and separator to the beginning of a QComboBox
 void InsertGlobalItem(QComboBox* combobox, int global_index);
+
+void GroupSettings(std::vector<Settings::BasicSetting*>& group, const u32* categories);
 
 } // namespace ConfigurationShared

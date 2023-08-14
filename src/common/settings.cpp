@@ -29,6 +29,7 @@ const char* TranslateCategory(Category category) {
     case Category::RendererStereo:
     case Category::RendererOther:
     case Category::RendererCardboard:
+    case Category::RendererDevice:
         return "Renderer";
     case Category::System:
         return "System";

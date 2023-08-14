@@ -2,8 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "citra_qt/configuration/configure_dialog.h"
+
 #include <map>
+#include <memory>
 #include <QListWidgetItem>
+#include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_audio.h"
 #include "citra_qt/configuration/configure_camera.h"
 #include "citra_qt/configuration/configure_debug.h"
@@ -19,24 +23,27 @@
 #include "citra_qt/configuration/configure_web.h"
 #include "citra_qt/hotkeys.h"
 #include "common/settings.h"
+#include "configuration/shared_widget.h"
 #include "core/core.h"
 #include "ui_configure.h"
 
 ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_, Core::System& system_,
                                  std::span<const QString> physical_devices, bool enable_web_config)
-    : QDialog(parent), ui{std::make_unique<Ui::ConfigureDialog>()}, registry{registry_},
+    : QDialog(parent), ui(std::make_unique<Ui::ConfigureDialog>()), registry(registry_),
       system{system_}, is_powered_on{system.IsPoweredOn()},
-      general_tab{std::make_unique<ConfigureGeneral>(this)},
-      system_tab{std::make_unique<ConfigureSystem>(system, this)},
-      input_tab{std::make_unique<ConfigureInput>(this)},
-      hotkeys_tab{std::make_unique<ConfigureHotkeys>(this)},
-      graphics_tab{std::make_unique<ConfigureGraphics>(physical_devices, is_powered_on, this)},
-      enhancements_tab{std::make_unique<ConfigureEnhancements>(this)},
-      audio_tab{std::make_unique<ConfigureAudio>(is_powered_on, this)},
-      camera_tab{std::make_unique<ConfigureCamera>(this)},
-      debug_tab{std::make_unique<ConfigureDebug>(is_powered_on, this)},
-      storage_tab{std::make_unique<ConfigureStorage>(is_powered_on, this)},
-      web_tab{std::make_unique<ConfigureWeb>(this)}, ui_tab{std::make_unique<ConfigureUi>(this)} {
+      builder{std::make_unique<ConfigurationShared::Builder>(parent, !system.IsPoweredOn())},
+      general_tab{std::make_unique<ConfigureGeneral>(parent)},
+      system_tab{std::make_unique<ConfigureSystem>(system, parent)},
+      input_tab{std::make_unique<ConfigureInput>(parent)},
+      hotkeys_tab{std::make_unique<ConfigureHotkeys>(parent)},
+      graphics_tab{std::make_unique<ConfigureGraphics>(*builder, physical_devices, system, parent)},
+      enhancements_tab{std::make_unique<ConfigureEnhancements>(parent)},
+      audio_tab{std::make_unique<ConfigureAudio>(is_powered_on, parent)},
+      camera_tab{std::make_unique<ConfigureCamera>(parent)},
+      debug_tab{std::make_unique<ConfigureDebug>(is_powered_on, parent)},
+      storage_tab{std::make_unique<ConfigureStorage>(is_powered_on, parent)},
+      web_tab{std::make_unique<ConfigureWeb>(parent)},
+      ui_tab{std::make_unique<ConfigureUi>(parent)} {
     Settings::SetConfiguringGlobal(true);
 
     ui->setupUi(this);
@@ -53,7 +60,6 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_, Cor
     ui->tabWidget->addTab(storage_tab.get(), tr("Storage"));
     ui->tabWidget->addTab(web_tab.get(), tr("Web"));
     ui->tabWidget->addTab(ui_tab.get(), tr("UI"));
-
     hotkeys_tab->Populate(registry);
     web_tab->SetWebServiceConfigEnabled(enable_web_config);
 

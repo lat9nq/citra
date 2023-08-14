@@ -23,6 +23,10 @@ namespace Core {
 class System;
 }
 
+namespace ConfigurationShared {
+class Builder;
+}
+
 class ConfigureGeneral;
 class ConfigureSystem;
 class ConfigureInput;
@@ -63,6 +67,8 @@ private:
     HotkeyRegistry& registry;
     Core::System& system;
     bool is_powered_on;
+
+    std::unique_ptr<ConfigurationShared::Builder> builder;
 
     std::unique_ptr<ConfigureGeneral> general_tab;
     std::unique_ptr<ConfigureSystem> system_tab;

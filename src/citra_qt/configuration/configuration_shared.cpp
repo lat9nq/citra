@@ -8,6 +8,8 @@
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_per_game.h"
 #include "common/settings.h"
+#include "common/settings_common.h"
+#include "common/settings_enums.h"
 
 void ConfigurationShared::ApplyPerGameSetting(Settings::SwitchableSetting<bool>* setting,
                                               const QCheckBox* checkbox,
@@ -93,3 +95,18 @@ void ConfigurationShared::InsertGlobalItem(QComboBox* combobox, int global_index
     combobox->insertItem(ConfigurationShared::USE_GLOBAL_INDEX, use_global_text);
     combobox->insertSeparator(ConfigurationShared::USE_GLOBAL_SEPARATOR_INDEX);
 }
+
+namespace ConfigurationShared {
+void GroupSettings(std::vector<Settings::BasicSetting*>& group, const u32* categories) {
+    for (int i = 0; categories[i] != 0; i++) {
+        const auto current_category = [&]() {
+            return static_cast<Settings::Category>(categories[i]);
+        };
+
+        LOG_DEBUG(Frontend, "Grouping category {}", Settings::CanonicalizeEnum(current_category()));
+        for (auto* setting : Settings::values.linkage.by_category[current_category()]) {
+            group.push_back(setting);
+        }
+    }
+}
+} // namespace ConfigurationShared

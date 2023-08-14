@@ -15,6 +15,10 @@ namespace Core {
 class System;
 }
 
+namespace ConfigurationShared {
+class Builder;
+}
+
 class ConfigureAudio;
 class ConfigureGeneral;
 class ConfigureEnhancements;
@@ -66,6 +70,8 @@ private:
     std::unique_ptr<Config> game_config;
 
     Core::System& system;
+
+    std::unique_ptr<ConfigurationShared::Builder> builder;
 
     std::unique_ptr<ConfigureAudio> audio_tab;
     std::unique_ptr<ConfigureGeneral> general_tab;
