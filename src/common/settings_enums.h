@@ -144,7 +144,7 @@ constexpr std::string CanonicalizeEnum(Type id) {
             return name;
         }
     }
-    return "unknown";
+    return fmt::format("{}", static_cast<u32>(id));
 }
 
 template <typename Type>
