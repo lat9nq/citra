@@ -23,9 +23,10 @@ enum Specialization : u8 {
     Hex = 2,         // Hexadecimal number
     List = 3,        // Setting has specific members
     RuntimeList = 4, // Members of the list are determined during runtime
-    Scalar = 5,      // Values are continuous
-    Countable = 6,   // Can be stepped through
-    Paired = 7,      // Another setting is associated with this setting
+    Slider = 5,
+    SpinBox = 6,
+    Paired = 7, // Another setting is associated with this setting
+    Radio = 8,
 
     Percentage = (1 << SpecializationAttributeOffset), // Should be represented as a percentage
 };

@@ -406,9 +406,9 @@ void Widget::SetupComponent(const QString& label, std::function<void()>& load_fu
             [[fallthrough]];
         case Settings::Specialization::List:
             return RequestType::ComboBox;
-        case Settings::Specialization::Scalar:
+        case Settings::Specialization::Slider:
             return RequestType::Slider;
-        case Settings::Specialization::Countable:
+        case Settings::Specialization::SpinBox:
             return RequestType::SpinBox;
         default:
             break;
