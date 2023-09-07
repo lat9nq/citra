@@ -130,11 +130,11 @@ ENUM(AudioEngine, Auto, Null, Cubeb, OpenAL, Sdl2, MaxEnum);
 
 ENUM(AudioInputType, Auto, Null, Static, Cubeb, OpenAL, MaxEnum);
 
-ENUM(Category, Audio, Core, Layout, Renderer, RendererAdvanced, RendererEnhancements, RendererApi,
-     RendererStereo, RendererOther, RendererDebug, RendererCardboard, RendererDevice, System,
-     Utility, DataStorage, Debugging, DebuggingGraphics, Miscellaneous, VideoDumping, WebService,
-     Controls, Ui, UiGeneral, UiLayout, UiGameList, UiUpdater, Screenshots, Shortcuts, Multiplayer,
-     Services, Paths, MaxEnum);
+ENUM(Category, Audio, Core, Layout, LayoutCustom, Renderer, RendererAdvanced, RendererEnhancements,
+     RendererApi, RendererStereo, RendererOther, RendererDebug, RendererCardboard, RendererDevice,
+     System, Utility, DataStorage, Debugging, DebuggingGraphics, Miscellaneous, VideoDumping,
+     WebService, Controls, Ui, UiGeneral, UiLayout, UiGameList, UiUpdater, Screenshots, Shortcuts,
+     Multiplayer, Services, Paths, MaxEnum);
 
 template <typename Type>
 constexpr std::string CanonicalizeEnum(Type id) {

@@ -481,6 +481,7 @@ void Config::ReadLayoutValues() {
     qt_config->beginGroup(QStringLiteral("Layout"));
 
     ReadCategory(Settings::Category::Layout);
+    ReadCategory(Settings::Category::LayoutCustom);
 
     qt_config->endGroup();
 }
@@ -866,6 +867,7 @@ void Config::SaveLayoutValues() {
     qt_config->beginGroup(QStringLiteral("Layout"));
 
     WriteCategory(Settings::Category::Layout);
+    WriteCategory(Settings::Category::LayoutCustom);
 
     qt_config->endGroup();
 }

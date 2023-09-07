@@ -20,6 +20,7 @@ const char* TranslateCategory(Category category) {
     case Category::Core:
         return "Core";
     case Category::Layout:
+    case Category::LayoutCustom:
         return "Layout";
     case Category::Renderer:
     case Category::RendererAdvanced:
