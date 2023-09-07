@@ -8,6 +8,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <typeindex>
 #include <typeinfo>
 #include "common/common_types.h"
@@ -112,8 +113,12 @@ protected:
             return value_.has_value() ? std::to_string(*value_) : "none";
         } else if constexpr (std::is_same_v<Type, bool>) {
             return value_ ? "true" : "false";
+        } else if constexpr (std::is_floating_point_v<Type>) {
+            return fmt::format("{:f}", value_);
+        } else if constexpr (std::is_enum_v<Type>) {
+            return std::to_string(static_cast<u32>(value_));
         } else {
-            return std::to_string(static_cast<u64>(value_));
+            return std::to_string(value_);
         }
     }
 
@@ -166,6 +171,7 @@ public:
      * @param input The desired value
      */
     void LoadString(const std::string& input) override final {
+        LOG_DEBUG(Common, "{} Received \"{}\"", GetLabel(), input);
         if (input.empty()) {
             this->SetValue(this->GetDefault());
             return;
@@ -177,6 +183,8 @@ public:
                 this->SetValue(static_cast<u32>(std::stoul(input)));
             } else if constexpr (std::is_same_v<Type, bool>) {
                 this->SetValue(input == "true");
+            } else if constexpr (std::is_same_v<Type, float>) {
+                this->SetValue(std::stof(input));
             } else {
                 this->SetValue(static_cast<Type>(std::stoll(input)));
             }
@@ -212,11 +220,27 @@ public:
         }
     }
 
+    [[nodiscard]] constexpr bool IsFloatingPoint() const final {
+        return std::is_floating_point_v<Type>;
+    }
+
+    [[nodiscard]] constexpr bool IsIntegral() const final {
+        return std::is_integral_v<Type>;
+    }
+
     [[nodiscard]] std::string MinVal() const override final {
-        return this->ToString(minimum);
+        if constexpr (std::is_arithmetic_v<Type> && !ranged) {
+            return this->ToString(std::numeric_limits<Type>::min());
+        } else {
+            return this->ToString(minimum);
+        }
     }
     [[nodiscard]] std::string MaxVal() const override final {
-        return this->ToString(maximum);
+        if constexpr (std::is_arithmetic_v<Type> && !ranged) {
+            return this->ToString(std::numeric_limits<Type>::max());
+        } else {
+            return this->ToString(maximum);
+        }
     }
 
     [[nodiscard]] constexpr bool Ranged() const override {
