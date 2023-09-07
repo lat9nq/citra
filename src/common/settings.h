@@ -184,15 +184,15 @@ struct Values {
         true,    true};
     Setting<bool> use_shader_jit{
         linkage, true, "use_shader_jit", Category::Renderer, Specialization::Default, true, true};
-    SwitchableSetting<u32, true> resolution_factor{linkage,
-                                                   1,
-                                                   0,
-                                                   10,
-                                                   "resolution_factor",
-                                                   Category::RendererEnhancements,
-                                                   Specialization::Default,
-                                                   true,
-                                                   true};
+    SwitchableSetting<ResolutionFactor, true> resolution_factor{linkage,
+                                                                ResolutionFactor::X1,
+                                                                ResolutionFactor::Auto,
+                                                                ResolutionFactor::X10,
+                                                                "resolution_factor",
+                                                                Category::RendererEnhancements,
+                                                                Specialization::Default,
+                                                                true,
+                                                                true};
     SwitchableSetting<u16, true> frame_limit{linkage, 100,           0,
                                              1000,    "frame_limit", Category::RendererOther};
     SwitchableSetting<TextureFilter> texture_filter{linkage, TextureFilter::None, "texture_filter",
@@ -204,25 +204,31 @@ struct Values {
     SwitchableSetting<bool> upright_screen{linkage, false, "upright_screen", Category::Layout};
     SwitchableSetting<float, true> large_screen_proportion{
         linkage, 4.f, 1.f, 16.f, "large_screen_proportion", Category::Layout};
-    Setting<bool> custom_layout{linkage, false, "custom_layout", Category::Layout};
-    Setting<u16> custom_top_left{linkage, 0, "custom_top_left", Category::Layout};
-    Setting<u16> custom_top_top{linkage, 0, "custom_top_top", Category::Layout};
-    Setting<u16> custom_top_right{linkage, 400, "custom_top_right", Category::Layout};
-    Setting<u16> custom_top_bottom{linkage, 240, "custom_top_bottom", Category::Layout};
-    Setting<u16> custom_bottom_left{linkage, 40, "custom_bottom_left", Category::Layout};
-    Setting<u16> custom_bottom_top{linkage, 240, "custom_bottom_top", Category::Layout};
-    Setting<u16> custom_bottom_right{linkage, 360, "custom_bottom_right", Category::Layout};
-    Setting<u16> custom_bottom_bottom{linkage, 480, "custom_bottom_bottom", Category::Layout};
+    Setting<bool> custom_layout{linkage, false, "custom_layout", Category::LayoutCustom};
+    Setting<u16> custom_top_left{linkage, 0, "custom_top_left", Category::LayoutCustom};
+    Setting<u16> custom_top_top{linkage, 0, "custom_top_top", Category::LayoutCustom};
+    Setting<u16> custom_top_right{linkage, 400, "custom_top_right", Category::LayoutCustom};
+    Setting<u16> custom_top_bottom{linkage, 240, "custom_top_bottom", Category::LayoutCustom};
+    Setting<u16> custom_bottom_left{linkage, 40, "custom_bottom_left", Category::LayoutCustom};
+    Setting<u16> custom_bottom_top{linkage, 240, "custom_bottom_top", Category::LayoutCustom};
+    Setting<u16> custom_bottom_right{linkage, 360, "custom_bottom_right", Category::LayoutCustom};
+    Setting<u16> custom_bottom_bottom{linkage, 480, "custom_bottom_bottom", Category::LayoutCustom};
     Setting<u16> custom_second_layer_opacity{linkage, 100, "custom_second_layer_opacity",
-                                             Category::Layout};
+                                             Category::LayoutCustom};
 
-    SwitchableSetting<float> bg_red{linkage, 0.f, "bg_red", Category::Renderer};
-    SwitchableSetting<float> bg_green{linkage, 0.f, "bg_green", Category::Renderer};
-    SwitchableSetting<float> bg_blue{linkage, 0.f, "bg_blue", Category::Renderer};
+    Setting<float> bg_red{linkage, 0.f, "bg_red", Category::Renderer};
+    Setting<float> bg_green{linkage, 0.f, "bg_green", Category::Renderer};
+    Setting<float> bg_blue{linkage, 0.f, "bg_blue", Category::Renderer};
 
     SwitchableSetting<StereoRenderOption> render_3d{linkage, StereoRenderOption::Off, "render_3d",
                                                     Category::RendererStereo};
-    SwitchableSetting<u32> factor_3d{linkage, 0, "factor_3d", Category::RendererStereo};
+    SwitchableSetting<u32, true> factor_3d{linkage,
+                                           0,
+                                           0,
+                                           100,
+                                           "factor_3d",
+                                           Category::RendererStereo,
+                                           Specialization::Slider | Specialization::Percentage};
     SwitchableSetting<MonoRenderOption> mono_render_option{
         linkage, MonoRenderOption::LeftEye, "mono_render_option", Category::RendererStereo};
 
@@ -233,10 +239,12 @@ struct Values {
 
     SwitchableSetting<bool> filter_mode{linkage, true, "filter_mode",
                                         Category::RendererEnhancements};
-    SwitchableSetting<std::string> pp_shader_name{linkage, "none (builtin)", "pp_shader_name",
-                                                  Category::RendererEnhancements};
+    Setting<std::string> pp_shader_name{linkage, "none (builtin)", "pp_shader_name",
+                                        Category::RendererEnhancements,
+                                        Specialization::RuntimeList};
     SwitchableSetting<std::string> anaglyph_shader_name{
-        linkage, "dubois (builtin)", "anaglyph_shader_name", Category::RendererEnhancements};
+        linkage, "dubois (builtin)", "anaglyph_shader_name", Category::RendererEnhancements,
+        Specialization::RuntimeList};
 
     SwitchableSetting<bool> dump_textures{linkage, false, "dump_textures", Category::Utility};
     SwitchableSetting<bool> custom_textures{linkage, false, "custom_textures", Category::Utility};

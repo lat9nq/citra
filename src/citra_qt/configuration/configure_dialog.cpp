@@ -37,7 +37,7 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_, Cor
       input_tab{std::make_unique<ConfigureInput>(parent)},
       hotkeys_tab{std::make_unique<ConfigureHotkeys>(parent)},
       graphics_tab{std::make_unique<ConfigureGraphics>(*builder, physical_devices, system, parent)},
-      enhancements_tab{std::make_unique<ConfigureEnhancements>(parent)},
+      enhancements_tab{std::make_unique<ConfigureEnhancements>(*builder, system, parent)},
       audio_tab{std::make_unique<ConfigureAudio>(is_powered_on, parent)},
       camera_tab{std::make_unique<ConfigureCamera>(parent)},
       debug_tab{std::make_unique<ConfigureDebug>(is_powered_on, parent)},

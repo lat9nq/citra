@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/settings.h"
+#include "common/settings_enums.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
 #include "core/tracer/recorder.h"
@@ -24,9 +25,10 @@ u32 RendererBase::GetResolutionScaleFactor() {
         return 1;
     }
 
-    const u32 scale_factor = Settings::values.resolution_factor.GetValue();
-    return scale_factor != 0 ? scale_factor
-                             : render_window.GetFramebufferLayout().GetScalingRatio();
+    const auto scale_factor = Settings::values.resolution_factor.GetValue();
+    return scale_factor == Settings::ResolutionFactor::Auto
+               ? render_window.GetFramebufferLayout().GetScalingRatio()
+               : static_cast<u32>(scale_factor);
 }
 
 void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {

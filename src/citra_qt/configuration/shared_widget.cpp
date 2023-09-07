@@ -225,10 +225,13 @@ QWidget* Widget::CreateSlider(bool reversed, float multiplier, const QString& gi
 
     const QString use_format = QStringLiteral("%1").append(suffix);
 
-    QObject::connect(slider, &QAbstractSlider::valueChanged, [=](int value) {
+    const auto update_feedback = [=](int value) {
         int present = (reversed ? max_val - value : value) * multiplier + 0.5f;
         feedback->setText(use_format.arg(QVariant::fromValue(present).value<QString>()));
-    });
+    };
+
+    QObject::connect(slider, &QAbstractSlider::valueChanged, update_feedback);
+    update_feedback(std::stoi(setting.ToString()));
 
     slider->setMinimum(std::stoi(setting.MinVal()));
     slider->setMaximum(max_val);
@@ -250,11 +253,9 @@ QWidget* Widget::CreateSpinBox(const QString& given_suffix,
                                std::function<std::string()>& serializer,
                                std::function<void()>& restore_func,
                                const std::function<void()>& touch) {
-    const int min_val =
-        setting.Ranged() ? std::stoi(setting.MinVal()) : std::numeric_limits<int>::min();
-    const int max_val =
-        setting.Ranged() ? std::stoi(setting.MaxVal()) : std::numeric_limits<int>::max();
-    const int default_val = std::stoi(setting.ToString());
+    const auto min_val = std::stol(setting.MinVal());
+    const auto max_val = std::stol(setting.MaxVal());
+    const auto default_val = std::stol(setting.ToString());
 
     QString suffix =
         given_suffix == QStringLiteral("") ? DefaultSuffix(this, setting) : given_suffix;
@@ -281,6 +282,41 @@ QWidget* Widget::CreateSpinBox(const QString& given_suffix,
     }
 
     return spinbox;
+}
+
+QWidget* Widget::CreateDoubleSpinBox(const QString& given_suffix,
+                                     std::function<std::string()>& serializer,
+                                     std::function<void()>& restore_func,
+                                     const std::function<void()>& touch) {
+    const auto min_val = std::stod(setting.MinVal());
+    const auto max_val = std::stod(setting.MaxVal());
+    const auto default_val = std::stod(setting.ToString());
+
+    QString suffix =
+        given_suffix == QStringLiteral("") ? DefaultSuffix(this, setting) : given_suffix;
+
+    double_spinbox = new QDoubleSpinBox(this);
+    double_spinbox->setRange(min_val, max_val);
+    double_spinbox->setValue(default_val);
+    double_spinbox->setSuffix(suffix);
+    double_spinbox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    serializer = [this]() { return fmt::format("{:f}", double_spinbox->value()); };
+
+    restore_func = [this]() {
+        auto value{std::stof(RelevantDefault(setting))};
+        double_spinbox->setValue(value);
+    };
+
+    if (!Settings::IsConfiguringGlobal()) {
+        QObject::connect(double_spinbox, &QDoubleSpinBox::valueChanged, [this, touch]() {
+            if (double_spinbox->value() != std::stof(setting.ToStringGlobal())) {
+                touch();
+            }
+        });
+    }
+
+    return double_spinbox;
 }
 
 QWidget* Widget::CreateHexEdit(std::function<std::string()>& serializer,
@@ -439,8 +475,7 @@ void Widget::SetupComponent(const QString& label, std::function<void()>& load_fu
         data_component = CreateCheckBox(&setting, label, serializer, restore_func, touch);
     } else if (setting.IsEnum()) {
         data_component = CreateCombobox(serializer, restore_func, touch);
-    } else if (type == typeid(u32) || type == typeid(int) || type == typeid(u16) ||
-               type == typeid(s64) || type == typeid(u8)) {
+    } else if (setting.IsIntegral()) {
         switch (request) {
         case RequestType::Slider:
         case RequestType::ReverseSlider:
@@ -467,6 +502,8 @@ void Widget::SetupComponent(const QString& label, std::function<void()>& load_fu
         default:
             UNIMPLEMENTED();
         }
+    } else if (setting.IsFloatingPoint()) {
+        data_component = CreateDoubleSpinBox(suffix, serializer, restore_func, touch);
     } else if (type == typeid(std::string)) {
         switch (request) {
         case RequestType::Default:
@@ -606,8 +643,8 @@ Widget::Widget(Settings::BasicSetting* setting_, const TranslationMap& translati
 
 Builder::Builder(QWidget* parent_, bool runtime_lock_)
     : translations{InitializeTranslations(parent_)},
-      combobox_translations{ComboboxEnumeration(parent_)}, parent{parent_}, runtime_lock{
-                                                                                runtime_lock_} {}
+      combobox_translations{ComboboxEnumeration(parent_)}, parent{parent_},
+      runtime_lock{runtime_lock_} {}
 
 Builder::~Builder() = default;
 

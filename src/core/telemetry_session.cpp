@@ -132,7 +132,7 @@ void TelemetrySession::AddInitialInfo(Loader::AppLoader& app_loader) {
     AddField(Telemetry::FieldType::UserConfig, "Core_UseCpuJit",
              Settings::values.use_cpu_jit.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_ResolutionFactor",
-             Settings::values.resolution_factor.GetValue());
+             static_cast<int>(Settings::values.resolution_factor.GetValue()));
     AddField(Telemetry::FieldType::UserConfig, "Renderer_FrameLimit",
              Settings::values.frame_limit.GetValue());
     AddField(Telemetry::FieldType::UserConfig, "Renderer_Backend",
