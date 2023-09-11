@@ -97,14 +97,12 @@ void ConfigurationShared::InsertGlobalItem(QComboBox* combobox, int global_index
 }
 
 namespace ConfigurationShared {
-void GroupSettings(std::vector<Settings::BasicSetting*>& group, const u32* categories) {
-    for (int i = 0; categories[i] != 0; i++) {
-        const auto current_category = [&]() {
-            return static_cast<Settings::Category>(categories[i]);
-        };
+void GroupSettings(std::vector<Settings::BasicSetting*>& group,
+                   const std::vector<Settings::Category>& categories) {
+    for (const auto category : categories) {
 
-        LOG_DEBUG(Frontend, "Grouping category {}", Settings::CanonicalizeEnum(current_category()));
-        for (auto* setting : Settings::values.linkage.by_category[current_category()]) {
+        LOG_DEBUG(Frontend, "Grouping category {}", Settings::CanonicalizeEnum(category));
+        for (auto* setting : Settings::values.linkage.by_category[category]) {
             group.push_back(setting);
         }
     }

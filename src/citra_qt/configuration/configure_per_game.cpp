@@ -35,7 +35,7 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
     game_config = std::make_unique<Config>(config_file_name, Config::ConfigType::PerGameConfig);
 
     const bool is_powered_on = system.IsPoweredOn();
-    audio_tab = std::make_unique<ConfigureAudio>(is_powered_on, this);
+    audio_tab = std::make_unique<ConfigureAudio>(*builder, system, this);
     general_tab = std::make_unique<ConfigureGeneral>(this);
     enhancements_tab = std::make_unique<ConfigureEnhancements>(*builder, system, this);
     graphics_tab = std::make_unique<ConfigureGraphics>(*builder, physical_devices, system, this);

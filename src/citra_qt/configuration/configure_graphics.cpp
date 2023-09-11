@@ -91,10 +91,9 @@ void ConfigureGraphics::RetranslateUI() {
 
 void ConfigureGraphics::Setup() {
     std::vector<Settings::BasicSetting*> settings;
-    constexpr u32 categories[5] = {static_cast<u32>(Settings::Category::Renderer),
-                                   static_cast<u32>(Settings::Category::RendererAdvanced),
-                                   static_cast<u32>(Settings::Category::RendererApi),
-                                   static_cast<u32>(Settings::Category::RendererDevice), 0};
+    const std::vector<Settings::Category> categories = {
+        Settings::Category::Renderer, Settings::Category::RendererAdvanced,
+        Settings::Category::RendererApi, Settings::Category::RendererDevice};
     ConfigurationShared::GroupSettings(settings, categories);
 
     for (auto* setting : settings) {

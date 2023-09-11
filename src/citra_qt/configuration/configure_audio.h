@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <QWidget>
 
 namespace Ui {
@@ -12,14 +13,21 @@ class ConfigureAudio;
 }
 
 namespace ConfigurationShared {
-enum class CheckState;
+class Builder;
 }
+
+namespace Core {
+class System;
+}
+
+class QComboBox;
 
 class ConfigureAudio : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureAudio(bool is_powered_on, QWidget* parent = nullptr);
+    explicit ConfigureAudio(ConfigurationShared::Builder& builder, const Core::System& system,
+                            QWidget* parent = nullptr);
     ~ConfigureAudio() override;
 
     void ApplyConfiguration();
@@ -34,10 +42,16 @@ private:
     void SetOutputDeviceFromDeviceID();
     void SetInputTypeFromInputType();
     void SetInputDeviceFromDeviceID();
-    void SetVolumeIndicatorText(int percentage);
 
-    void SetupPerGameUI();
+    void Setup(ConfigurationShared::Builder& builder);
 
-    ConfigurationShared::CheckState audio_stretching;
     std::unique_ptr<Ui::ConfigureAudio> ui;
+    QComboBox* output_device_combo_box;
+    QComboBox* input_device_combo_box;
+    QComboBox* output_type_combo_box;
+    QComboBox* input_type_combo_box;
+
+    std::vector<std::function<void(bool)>> apply_funcs{};
+
+    const Core::System& system;
 };

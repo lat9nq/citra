@@ -195,6 +195,56 @@ QWidget* Widget::CreateLineEdit(std::function<std::string()>& serializer,
     return line_edit;
 }
 
+static void CreateIntSlider(Settings::BasicSetting& setting, bool reversed, float multiplier,
+                            QLabel* feedback, const QString& use_format, QSlider* slider,
+                            std::function<std::string()>& serializer,
+                            std::function<void()>& restore_func) {
+    int max_val = std::stoi(setting.MaxVal());
+
+    const auto update_feedback = [=](int value) {
+        int present = (reversed ? max_val - value : value) * multiplier + 0.5f;
+        feedback->setText(use_format.arg(QVariant::fromValue(present).value<QString>()));
+    };
+
+    QObject::connect(slider, &QAbstractSlider::valueChanged, update_feedback);
+    update_feedback(std::stoi(setting.ToString()));
+
+    slider->setMinimum(std::stoi(setting.MinVal()));
+    slider->setMaximum(max_val);
+    slider->setValue(std::stoi(setting.ToString()));
+
+    serializer = [slider]() { return std::to_string(slider->value()); };
+    restore_func = [slider, &setting]() { slider->setValue(std::stoi(RelevantDefault(setting))); };
+}
+
+static void CreateFloatSlider(Settings::BasicSetting& setting, bool reversed, float multiplier,
+                              QLabel* feedback, const QString& use_format, QSlider* slider,
+                              std::function<std::string()>& serializer,
+                              std::function<void()>& restore_func) {
+    float max_val = std::stof(setting.MaxVal());
+    float min_val = std::stof(setting.MinVal());
+    float use_multiplier = multiplier == default_multiplier ? default_float_multiplier : multiplier;
+
+    const auto update_feedback = [=](int value) {
+        int present = (reversed ? max_val - value : value) + 0.5f;
+        feedback->setText(use_format.arg(QVariant::fromValue(present).value<QString>()));
+    };
+
+    QObject::connect(slider, &QAbstractSlider::valueChanged, update_feedback);
+    update_feedback(std::stoi(setting.ToString()));
+
+    slider->setMinimum(min_val * use_multiplier);
+    slider->setMaximum(max_val * use_multiplier);
+    slider->setValue(std::stoi(setting.ToString()) * use_multiplier);
+
+    serializer = [slider, use_multiplier]() {
+        return std::to_string(slider->value() / use_multiplier);
+    };
+    restore_func = [slider, &setting, use_multiplier]() {
+        slider->setValue(std::stof(RelevantDefault(setting)) * use_multiplier);
+    };
+}
+
 QWidget* Widget::CreateSlider(bool reversed, float multiplier, const QString& given_suffix,
                               std::function<std::string()>& serializer,
                               std::function<void()>& restore_func,
@@ -218,29 +268,20 @@ QWidget* Widget::CreateSlider(bool reversed, float multiplier, const QString& gi
 
     layout->setContentsMargins(0, 0, 0, 0);
 
-    int max_val = std::stoi(setting.MaxVal());
-
     QString suffix =
         given_suffix == QStringLiteral("") ? DefaultSuffix(this, setting) : given_suffix;
 
     const QString use_format = QStringLiteral("%1").append(suffix);
 
-    const auto update_feedback = [=](int value) {
-        int present = (reversed ? max_val - value : value) * multiplier + 0.5f;
-        feedback->setText(use_format.arg(QVariant::fromValue(present).value<QString>()));
-    };
-
-    QObject::connect(slider, &QAbstractSlider::valueChanged, update_feedback);
-    update_feedback(std::stoi(setting.ToString()));
-
-    slider->setMinimum(std::stoi(setting.MinVal()));
-    slider->setMaximum(max_val);
-    slider->setValue(std::stoi(setting.ToString()));
+    if (setting.IsIntegral()) {
+        CreateIntSlider(setting, reversed, multiplier, feedback, use_format, slider, serializer,
+                        restore_func);
+    } else {
+        CreateFloatSlider(setting, reversed, multiplier, feedback, use_format, slider, serializer,
+                          restore_func);
+    }
 
     slider->setInvertedAppearance(reversed);
-
-    serializer = [this]() { return std::to_string(slider->value()); };
-    restore_func = [this]() { slider->setValue(std::stoi(RelevantDefault(setting))); };
 
     if (!Settings::IsConfiguringGlobal()) {
         QObject::connect(slider, &QAbstractSlider::actionTriggered, [touch]() { touch(); });
@@ -503,7 +544,22 @@ void Widget::SetupComponent(const QString& label, std::function<void()>& load_fu
             UNIMPLEMENTED();
         }
     } else if (setting.IsFloatingPoint()) {
-        data_component = CreateDoubleSpinBox(suffix, serializer, restore_func, touch);
+        switch (request) {
+        case RequestType::Default:
+        case RequestType::SpinBox:
+            data_component = CreateDoubleSpinBox(suffix, serializer, restore_func, touch);
+            break;
+        case RequestType::Slider:
+        case RequestType::ReverseSlider:
+            data_component = CreateSlider(request == RequestType::ReverseSlider, multiplier, suffix,
+                                          serializer, restore_func, touch);
+        case RequestType::ComboBox:
+        case RequestType::LineEdit:
+        case RequestType::HexEdit:
+        case RequestType::DateTimeEdit:
+        case RequestType::MaxEnum:
+            UNIMPLEMENTED();
+        }
     } else if (type == typeid(std::string)) {
         switch (request) {
         case RequestType::Default:

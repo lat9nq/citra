@@ -73,6 +73,15 @@ std::unique_ptr<TranslationMap> InitializeTranslations(QWidget* parent) {
     BLANK(Settings, bg_green);
     BLANK(Settings, bg_blue);
 
+    INSERT(Settings, audio_emulation, "Emulation", "");
+    INSERT(Settings, output_type, "Output Type", "");
+    INSERT(Settings, output_device, "Output Device", "");
+    INSERT(Settings, enable_audio_stretching, "Enable audio stretching", "");
+    INSERT(Settings, volume, "Volume", "");
+    INSERT(Settings, input_type, "Input Type", "");
+    INSERT(Settings, input_device, "Input Device", "");
+
+#undef BLANK
 #undef INSERT
 
     return translations;
@@ -141,6 +150,28 @@ std::unique_ptr<ComboboxTranslationMap> ComboboxEnumeration(QWidget* parent) {
                               PAIR(ResolutionFactor, X8, "8x (3200x1920)"),
                               PAIR(ResolutionFactor, X9, "9x (3600x2160)"),
                               PAIR(ResolutionFactor, X10, "10x (4000x2400)"),
+                          }});
+    translations->insert({INDEX(AudioEngine),
+                          {
+                              PAIR(AudioEngine, Auto, "Auto"),
+                              PAIR(AudioEngine, Null, "None"),
+                              PAIR(AudioEngine, Cubeb, "Cubeb"),
+                              PAIR(AudioEngine, OpenAL, "OpenAL"),
+                              PAIR(AudioEngine, Sdl2, "SDL2"),
+                          }});
+    translations->insert({INDEX(AudioEmulation),
+                          {
+                              PAIR(AudioEmulation, Hle, "HLE (fast)"),
+                              PAIR(AudioEmulation, Lle, "LLE (Accurate)"),
+                              PAIR(AudioEmulation, LleMultithreaded, "LLE multi-core"),
+                          }});
+    translations->insert({INDEX(AudioInputType),
+                          {
+                              PAIR(AudioInputType, Auto, "Auto"),
+                              PAIR(AudioInputType, Null, "None"),
+                              PAIR(AudioInputType, Static, "Static"),
+                              PAIR(AudioInputType, Cubeb, "Cubeb"),
+                              PAIR(AudioInputType, OpenAL, "OpenAL"),
                           }});
 
 #undef PAIR

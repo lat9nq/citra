@@ -123,14 +123,12 @@ void ConfigureEnhancements::ApplyConfiguration() {
 }
 
 void ConfigureEnhancements::Setup(ConfigurationShared::Builder& builder) {
-    constexpr std::array<u32, 5> categories = {
-        static_cast<u32>(Settings::Category::RendererEnhancements),
-        static_cast<u32>(Settings::Category::Utility),
-        static_cast<u32>(Settings::Category::RendererStereo),
-        static_cast<u32>(Settings::Category::Layout), 0};
+    const std::vector<Settings::Category> categories = {
+        Settings::Category::RendererEnhancements, Settings::Category::Utility,
+        Settings::Category::RendererStereo, Settings::Category::Layout};
 
     std::vector<Settings::BasicSetting*> settings;
-    ConfigurationShared::GroupSettings(settings, categories.data());
+    ConfigurationShared::GroupSettings(settings, categories);
 
     for (auto* setting : settings) {
         ConfigurationShared::Widget* widget = builder.BuildWidget(setting, apply_funcs);

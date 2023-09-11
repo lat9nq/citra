@@ -42,6 +42,9 @@ enum class RequestType {
     MaxEnum,
 };
 
+constexpr const float default_multiplier{1.f};
+constexpr const float default_float_multiplier{100.f};
+
 class Widget : public QWidget {
     Q_OBJECT
 
@@ -144,7 +147,8 @@ public:
     Widget* BuildWidget(Settings::BasicSetting* setting,
                         std::vector<std::function<void(bool)>>& apply_funcs,
                         RequestType request = RequestType::Default, bool managed = true,
-                        float multiplier = 1.0f, Settings::BasicSetting* other_setting = nullptr,
+                        float multiplier = default_multiplier,
+                        Settings::BasicSetting* other_setting = nullptr,
                         const QString& suffix = QStringLiteral("")) const;
 
     Widget* BuildWidget(Settings::BasicSetting* setting,
