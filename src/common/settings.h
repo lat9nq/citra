@@ -256,14 +256,22 @@ struct Values {
     bool audio_muted;
     SwitchableSetting<AudioEmulation> audio_emulation{linkage, AudioEmulation::Hle,
                                                       "audio_emulation", Category::Audio};
+    Setting<AudioEngine> output_type{linkage, AudioEngine::Auto, "output_type", Category::Audio};
+    Setting<std::string> output_device{linkage, "auto", "output_device", Category::Audio,
+                                       Specialization::RuntimeList};
     SwitchableSetting<bool> enable_audio_stretching{linkage, true, "enable_audio_stretching",
                                                     Category::Audio};
-    SwitchableSetting<float, true> volume{linkage, 1.f, 0.f, 1.f, "volume", Category::Audio};
-    Setting<AudioEngine> output_type{linkage, AudioEngine::Auto, "output_type", Category::Audio};
-    Setting<std::string> output_device{linkage, "auto", "output_device", Category::Audio};
+    SwitchableSetting<float, true> volume{linkage,
+                                          1.f,
+                                          0.f,
+                                          1.f,
+                                          "volume",
+                                          Category::Audio,
+                                          Specialization::Slider | Specialization::Percentage};
     Setting<AudioInputType> input_type{linkage, AudioInputType::Auto, "input_type",
-                                       Category::Audio};
-    Setting<std::string> input_device{linkage, "auto", "input_device", Category::Audio};
+                                       Category::AudioInput};
+    Setting<std::string> input_device{linkage, "auto", "input_device", Category::AudioInput,
+                                      Specialization::RuntimeList};
 
     // Camera
     std::array<std::string, CAMERA_COUNT> camera_name;

@@ -16,6 +16,7 @@ static bool configuring_global = true;
 const char* TranslateCategory(Category category) {
     switch (category) {
     case Category::Audio:
+    case Category::AudioInput:
         return "Audio";
     case Category::Core:
         return "Core";
