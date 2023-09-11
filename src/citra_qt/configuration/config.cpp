@@ -272,6 +272,7 @@ void Config::ReadAudioValues() {
     qt_config->beginGroup(QStringLiteral("Audio"));
 
     ReadCategory(Settings::Category::Audio);
+    ReadCategory(Settings::Category::AudioInput);
 
     qt_config->endGroup();
 }
@@ -722,6 +723,7 @@ void Config::SaveAudioValues() {
     qt_config->beginGroup(QStringLiteral("Audio"));
 
     WriteCategory(Settings::Category::Audio);
+    WriteCategory(Settings::Category::AudioInput);
 
     qt_config->endGroup();
 }
