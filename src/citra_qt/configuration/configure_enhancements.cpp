@@ -29,7 +29,9 @@ ConfigureEnhancements::ConfigureEnhancements(ConfigurationShared::Builder& build
     const bool res_scale_enabled = graphics_api != Settings::GraphicsAPI::Software;
     resolution_factor_combobox->setEnabled(res_scale_enabled);
 
-    connect(render_3d_combobox,
+    if (Settings::IsConfiguringGlobal()) {
+        connect(
+            render_3d_combobox,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
             [this, &builder](int current_index) {
                 const auto& translations = builder.ComboboxTranslations();
@@ -39,6 +41,7 @@ ConfigureEnhancements::ConfigureEnhancements(ConfigurationShared::Builder& build
                         .first);
                 UpdateShaders(selected_option);
             });
+    }
 
     connect(ui->bg_button, &QPushButton::clicked, this, [this] {
         const QColor new_bg_color = QColorDialog::getColor(bg_color);
