@@ -553,6 +553,7 @@ void Widget::SetupComponent(const QString& label, std::function<void()>& load_fu
         case RequestType::ReverseSlider:
             data_component = CreateSlider(request == RequestType::ReverseSlider, multiplier, suffix,
                                           serializer, restore_func, touch);
+            break;
         case RequestType::ComboBox:
         case RequestType::LineEdit:
         case RequestType::HexEdit:
