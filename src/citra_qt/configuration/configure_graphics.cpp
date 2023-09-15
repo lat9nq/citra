@@ -72,6 +72,31 @@ ConfigureGraphics::ConfigureGraphics(const ConfigurationShared::Builder& builder
     SetPhysicalDeviceComboVisibility(graphics_api_combo->currentIndex());
 
     SetConfiguration();
+
+    const auto api_widget_enable = [this, &builder](int index) {
+        const auto& pair = builder.ComboboxTranslations()
+                               .at(Settings::EnumMetadata<Settings::GraphicsAPI>::Index())
+                               .at(index);
+        const auto graphics_api = static_cast<Settings::GraphicsAPI>(pair.first);
+        const bool is_software = graphics_api == Settings::GraphicsAPI::Software;
+
+        toggle_hw_shader->setEnabled(!is_software);
+        toggle_shaders_accurate_mul->setEnabled(!is_software);
+        toggle_disk_shader_cache->setEnabled(!is_software && toggle_hw_shader->isChecked());
+    };
+
+    const auto hw_shader_widget_enable = [this] {
+        const bool checked = toggle_hw_shader->isChecked();
+        toggle_shaders_accurate_mul->setEnabled(checked);
+        toggle_disk_shader_cache->setEnabled(checked);
+    };
+
+    connect(graphics_api_combo, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            api_widget_enable);
+
+    connect(toggle_hw_shader, &QCheckBox::toggled, this, hw_shader_widget_enable);
+    hw_shader_widget_enable();
+    api_widget_enable(graphics_api_combo->currentIndex());
 }
 
 ConfigureGraphics::~ConfigureGraphics() = default;
