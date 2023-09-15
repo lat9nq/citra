@@ -150,7 +150,7 @@ QWidget* Widget::CreateCombobox(std::function<std::string()>& serializer,
         return -1;
     };
 
-    const u32 setting_value = std::stoi(setting.ToString());
+    const u32 setting_value = std::strtoul(setting.ToString().c_str(), nullptr, 0);
     combobox->setCurrentIndex(find_index(setting_value));
 
     serializer = [this, enumeration]() {
@@ -159,7 +159,7 @@ QWidget* Widget::CreateCombobox(std::function<std::string()>& serializer,
     };
 
     restore_func = [this, find_index]() {
-        const u32 global_value = std::stoi(RelevantDefault(setting));
+        const u32 global_value = std::strtoul(RelevantDefault(setting).c_str(), nullptr, 0);
         combobox->setCurrentIndex(find_index(global_value));
     };
 
@@ -199,49 +199,52 @@ static void CreateIntSlider(Settings::BasicSetting& setting, bool reversed, floa
                             QLabel* feedback, const QString& use_format, QSlider* slider,
                             std::function<std::string()>& serializer,
                             std::function<void()>& restore_func) {
-    int max_val = std::stoi(setting.MaxVal());
+    const int max_val = std::strtol(setting.MaxVal().c_str(), nullptr, 0);
 
     const auto update_feedback = [=](int value) {
-        int present = (reversed ? max_val - value : value) * multiplier + 0.5f;
+        const int present = (reversed ? max_val - value : value) * multiplier + 0.5f;
         feedback->setText(use_format.arg(QVariant::fromValue(present).value<QString>()));
     };
 
     QObject::connect(slider, &QAbstractSlider::valueChanged, update_feedback);
-    update_feedback(std::stoi(setting.ToString()));
+    update_feedback(std::strtol(setting.ToString().c_str(), nullptr, 0));
 
-    slider->setMinimum(std::stoi(setting.MinVal()));
+    slider->setMinimum(std::strtol(setting.MinVal().c_str(), nullptr, 0));
     slider->setMaximum(max_val);
-    slider->setValue(std::stoi(setting.ToString()));
+    slider->setValue(std::strtol(setting.ToString().c_str(), nullptr, 0));
 
     serializer = [slider]() { return std::to_string(slider->value()); };
-    restore_func = [slider, &setting]() { slider->setValue(std::stoi(RelevantDefault(setting))); };
+    restore_func = [slider, &setting]() {
+        slider->setValue(std::strtol(RelevantDefault(setting).c_str(), nullptr, 0));
+    };
 }
 
 static void CreateFloatSlider(Settings::BasicSetting& setting, bool reversed, float multiplier,
                               QLabel* feedback, const QString& use_format, QSlider* slider,
                               std::function<std::string()>& serializer,
                               std::function<void()>& restore_func) {
-    float max_val = std::stof(setting.MaxVal());
-    float min_val = std::stof(setting.MinVal());
-    float use_multiplier = multiplier == default_multiplier ? default_float_multiplier : multiplier;
+    const float max_val = std::strtof(setting.MaxVal().c_str(), nullptr);
+    const float min_val = std::strtof(setting.MinVal().c_str(), nullptr);
+    const float use_multiplier =
+        multiplier == default_multiplier ? default_float_multiplier : multiplier;
 
-    const auto update_feedback = [=](int value) {
-        int present = (reversed ? max_val - value : value) + 0.5f;
+    const auto update_feedback = [=](float value) {
+        const int present = (reversed ? max_val - value : value) + 0.5f;
         feedback->setText(use_format.arg(QVariant::fromValue(present).value<QString>()));
     };
 
     QObject::connect(slider, &QAbstractSlider::valueChanged, update_feedback);
-    update_feedback(std::stoi(setting.ToString()));
+    update_feedback(std::strtof(setting.ToString().c_str(), nullptr));
 
     slider->setMinimum(min_val * use_multiplier);
     slider->setMaximum(max_val * use_multiplier);
-    slider->setValue(std::stoi(setting.ToString()) * use_multiplier);
+    slider->setValue(std::strtof(setting.ToString().c_str(), nullptr) * use_multiplier);
 
     serializer = [slider, use_multiplier]() {
         return std::to_string(slider->value() / use_multiplier);
     };
     restore_func = [slider, &setting, use_multiplier]() {
-        slider->setValue(std::stof(RelevantDefault(setting)) * use_multiplier);
+        slider->setValue(std::strtof(RelevantDefault(setting).c_str(), nullptr) * use_multiplier);
     };
 }
 
@@ -294,9 +297,9 @@ QWidget* Widget::CreateSpinBox(const QString& given_suffix,
                                std::function<std::string()>& serializer,
                                std::function<void()>& restore_func,
                                const std::function<void()>& touch) {
-    const auto min_val = std::stol(setting.MinVal());
-    const auto max_val = std::stol(setting.MaxVal());
-    const auto default_val = std::stol(setting.ToString());
+    const auto min_val = std::strtol(setting.MinVal().c_str(), nullptr, 0);
+    const auto max_val = std::strtol(setting.MaxVal().c_str(), nullptr, 0);
+    const auto default_val = std::strtol(setting.ToString().c_str(), nullptr, 0);
 
     QString suffix =
         given_suffix == QStringLiteral("") ? DefaultSuffix(this, setting) : given_suffix;
@@ -310,13 +313,13 @@ QWidget* Widget::CreateSpinBox(const QString& given_suffix,
     serializer = [this]() { return std::to_string(spinbox->value()); };
 
     restore_func = [this]() {
-        auto value{std::stol(RelevantDefault(setting))};
+        auto value{std::strtol(RelevantDefault(setting).c_str(), nullptr, 0)};
         spinbox->setValue(value);
     };
 
     if (!Settings::IsConfiguringGlobal()) {
         QObject::connect(spinbox, QOverload<int>::of(&QSpinBox::valueChanged), [this, touch]() {
-            if (spinbox->value() != std::stoi(setting.ToStringGlobal())) {
+            if (spinbox->value() != std::strtol(setting.ToStringGlobal().c_str(), nullptr, 0)) {
                 touch();
             }
         });
@@ -329,9 +332,9 @@ QWidget* Widget::CreateDoubleSpinBox(const QString& given_suffix,
                                      std::function<std::string()>& serializer,
                                      std::function<void()>& restore_func,
                                      const std::function<void()>& touch) {
-    const auto min_val = std::stod(setting.MinVal());
-    const auto max_val = std::stod(setting.MaxVal());
-    const auto default_val = std::stod(setting.ToString());
+    const auto min_val = std::strtod(setting.MinVal().c_str(), nullptr);
+    const auto max_val = std::strtod(setting.MaxVal().c_str(), nullptr);
+    const auto default_val = std::strtod(setting.ToString().c_str(), nullptr);
 
     QString suffix =
         given_suffix == QStringLiteral("") ? DefaultSuffix(this, setting) : given_suffix;
@@ -345,16 +348,18 @@ QWidget* Widget::CreateDoubleSpinBox(const QString& given_suffix,
     serializer = [this]() { return fmt::format("{:f}", double_spinbox->value()); };
 
     restore_func = [this]() {
-        auto value{std::stof(RelevantDefault(setting))};
+        const auto value{std::strtod(RelevantDefault(setting).c_str(), nullptr)};
         double_spinbox->setValue(value);
     };
 
     if (!Settings::IsConfiguringGlobal()) {
-        QObject::connect(double_spinbox, &QDoubleSpinBox::valueChanged, [this, touch]() {
-            if (double_spinbox->value() != std::stof(setting.ToStringGlobal())) {
-                touch();
-            }
-        });
+        QObject::connect(double_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                         [this, touch]() {
+                             if (double_spinbox->value() !=
+                                 std::strtod(setting.ToStringGlobal().c_str(), nullptr)) {
+                                 touch();
+                             }
+                         });
     }
 
     return double_spinbox;
@@ -369,7 +374,8 @@ QWidget* Widget::CreateHexEdit(std::function<std::string()>& serializer,
     }
 
     auto to_hex = [=](const std::string& input) {
-        return QString::fromStdString(fmt::format("{:08x}", std::stoul(input)));
+        return QString::fromStdString(
+            fmt::format("{:08x}", std::strtoul(input.c_str(), nullptr, 0)));
     };
 
     QRegularExpressionValidator* regex = new QRegularExpressionValidator(
@@ -382,7 +388,7 @@ QWidget* Widget::CreateHexEdit(std::function<std::string()>& serializer,
     line_edit->setValidator(regex);
 
     auto hex_to_dec = [this]() -> std::string {
-        return std::to_string(std::stoul(line_edit->text().toStdString(), nullptr, 16));
+        return std::to_string(std::strtoul(line_edit->text().toUtf8(), nullptr, 16));
     };
 
     serializer = [hex_to_dec]() { return hex_to_dec(); };
@@ -402,7 +408,8 @@ QWidget* Widget::CreateDateTimeEdit(bool disabled, bool restrict,
                                     std::function<void()>& restore_func,
                                     const std::function<void()>& touch) {
     const long long current_time = QDateTime::currentSecsSinceEpoch();
-    const s64 the_time = disabled ? current_time : std::stoll(setting.ToString());
+    const s64 the_time =
+        disabled ? current_time : std::strtoll(setting.ToString().c_str(), nullptr, 0);
     const auto default_val = QDateTime::fromSecsSinceEpoch(the_time);
 
     date_time_edit = new QDateTimeEdit(this);
@@ -415,7 +422,7 @@ QWidget* Widget::CreateDateTimeEdit(bool disabled, bool restrict,
     auto get_clear_val = [this, restrict, current_time]() {
         return QDateTime::fromSecsSinceEpoch([this, restrict, current_time]() {
             if (restrict && checkbox->checkState() == Qt::Checked) {
-                return std::stoll(RelevantDefault(setting));
+                return std::strtoll(RelevantDefault(setting).c_str(), nullptr, 0);
             }
             return current_time;
         }());
