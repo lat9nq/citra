@@ -73,7 +73,7 @@ ConfigureGraphics::ConfigureGraphics(const ConfigurationShared::Builder& builder
 
     SetConfiguration();
 
-    const auto api_widget_enable = [this, &builder](int index) {
+    const auto api_widget_enable = [this](int index) {
         const auto& pair = builder.ComboboxTranslations()
                                .at(Settings::EnumMetadata<Settings::GraphicsAPI>::Index())
                                .at(index);
